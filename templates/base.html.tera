@@ -1,0 +1,29 @@
+{% import 'menus/macro' as menus %}
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>{% block title %}Torrent Importer{% endblock %}</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="/assets/css/bulma.min.css">
+        <link rel="stylesheet" href="/assets/css/fork-awesome.min.css">
+        <link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico">
+	</head>
+	<body>
+        {% include 'menus/header' %}
+
+        <section class="section" style="padding: 0;">
+            <div class="container">
+{% for error in errors %}
+                <div class="notification is-danger">
+                <h2 style="font-weight: bold; text-align: center;">{{ error|replace(from="\n", to="<br>")|safe }}</h2>
+                </div>
+{% endfor %}
+                {% block main %}{% endblock %}
+            </div>
+        </section>
+        <footer>
+            {% include 'menus/footer' %}
+        </footer>
+	</body>
+</html>

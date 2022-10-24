@@ -1,0 +1,20 @@
+{% macro macro(entries, branding=true) %}
+        <nav class="navbar fa-2x" role="navigation" aria-label="main navigation" style="max-width: 900px; margin: auto; justify-content: center; height: 6rem;">
+{% if branding %}
+            <div class="navbar-brand">
+                <a class="navbar-item" href="index.php">
+                    <img src="/assets/images/torrentmanager_flat.png" style="height: 100%; max-height: 2em;">
+                </a>
+            </div>
+{% endif %}
+            <div class="navbar-menu" style="flex-grow: 0;">
+{% for entry in entries %}
+                <a class="navbar-item" href="{{ entry.link }}">
+                    <span class="icon-text">
+                        <span class="icon"><i class="fa {{ entry.icon }}"></i></span><span>{{ entry.name }}</span>
+                    </span>
+                </a>
+{% endfor %}
+            </div>
+        </nav>
+{% endmacro macro %}

@@ -1,0 +1,13 @@
+{% set menu = menu|default(value=1) %}
+{% if menu > 3 or menu == 0 %}
+    {% set errors = errors | concat(with = "Unknown menu: " ~ menu) %}
+    {% set menu = 1 %}
+{% endif %}
+{% if menu == 1 %}
+{% set entries = menu(entries = [ "collections", "progress", "logs", "translations", "upload" ]) %}
+{% elif menu == 2 %}
+{% set entries = menu(entries = [ "collections", "chores1", "reviews", "upload" ]) %}
+{% elif menu == 3 %}
+{% set entries = menu(entries = [ "collections", "chores2", "reviews", "upload" ]) %}
+{% endif %}
+{{ menus::macro(entries = entries) }}

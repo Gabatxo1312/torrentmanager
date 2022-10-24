@@ -1,0 +1,19 @@
+{% extends "base" %}
+
+{% block main %}
+<div style="text-align: center; margin: auto;">
+    <h1 class="title">Welcome to TorrentManager</h1>
+    <article class="message is-info" style="max-width: 600px; margin: auto;">
+      <div class="message-header is-size-5">
+        <p>A little more configuration, and you're good to go!</p>
+      </div>
+      <div class="message-body">
+        <ul class="is-flex is-flex-direction-column has-text-left is-size-5">
+                    <li><i class="fa fa-angellist"></i> TorrentManager is up and running</li>
+                    <li{% if not is_qbt_setup %} class="has-text-danger"{% endif %}><i class="fa {% if is_qbt_setup %}fa-angellist{% else %}fa-times-circle{% endif %}"></i> qbt is setup properly</li>
+                    <li{% if not is_database_loaded %} class="has-text-danger"{% endif %}><i class="fa {% if is_database_loaded %}fa-angellist{% else %}fa-times-circle {% endif %}"></i> Collections have been configured</li>
+        </ul>
+      </div>
+    </article>
+</div>
+{% endblock %}
