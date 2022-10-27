@@ -12,3 +12,8 @@ toml = "0.5"
 serde = { version = "1", features = [ "derive" ] }
 snafu = "0.7"
 qbt = { git = "https://kl.netlib.re/gitea/programmer/qbt-rs" }
+
+[profile.release]
+strip = true
+lto = "thin"
+opt-level = "z"
