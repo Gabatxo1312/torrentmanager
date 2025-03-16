@@ -1,0 +1,9 @@
+collections_dir = "/tmp/tags"
+uploads_dir = "/tmp/uploads"
+torrents_dir = "/tmp/torrents"
+
+[qbittorrent]
+host = "localhost"
+port = 8080
+login = "admin"
+password = "adminadmin"

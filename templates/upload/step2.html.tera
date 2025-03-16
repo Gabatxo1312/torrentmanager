@@ -1,0 +1,17 @@
+{% extends "base" %}
+
+{% block title %}{% if errors %}ERREUR{% else %}SUCCÈS{% endif %}{% endblock %}
+
+{% block extra_head %}
+{% if not errors %}
+	<meta http-equiv="refresh" content="1; url=/progress/hash/{{ truncated_hash }}">
+{% endif %}
+{% endblock %} 
+
+{% block main %}
+{% if not errors %}
+					<h1 class="title" style="text-align: center;">
+						SUCCÈS
+					</h1>
+{% endif %}
+{% endblock %}

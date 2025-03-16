@@ -1,7 +1,7 @@
 pub mod context;
 pub mod menu;
-pub use menu::MenuEntry;
 pub use menu::EntryFn;
+pub use menu::MenuEntry;
 pub use menu::MenuFn;
 
 // zola macro

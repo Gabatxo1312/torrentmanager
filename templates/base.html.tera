@@ -8,6 +8,7 @@
 		<link rel="stylesheet" href="/assets/css/bulma.min.css">
         <link rel="stylesheet" href="/assets/css/fork-awesome.min.css">
         <link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico">
+        {% block extra_head %}{% endblock extra_head %}
 	</head>
 	<body>
         {% include 'menus/header' %}
@@ -19,11 +20,19 @@
                 <h2 style="font-weight: bold; text-align: center;">{{ error|replace(from="\n", to="<br>")|safe }}</h2>
                 </div>
 {% endfor %}
+{% for warning in warnings %}
+		<div class="notification is-warning">
+		<h2 style="font-weight: bold; text-align: center;">{{ warning|replace(from="\n", to="<br>"|safe) }}</h2>
+{% endfor %}
+		</div>
                 {% block main %}{% endblock %}
             </div>
         </section>
         <footer>
             {% include 'menus/footer' %}
+			{% if free_space %}
+				<h3 style="margin: auto; font-weight: bolder;">Free space: {{ free_space }}</h3>
+			{% endif %}
         </footer>
 	</body>
 </html>

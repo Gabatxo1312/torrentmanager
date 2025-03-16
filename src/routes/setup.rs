@@ -1,14 +1,32 @@
 use rocket::State;
+use rocket::outcome::Outcome;
+use rocket::request::{self, Request, FromRequest};
 use rocket_dyn_templates::Template;
-use rocket_dyn_templates::tera::to_value;
 
-use crate::GlobalContext;
+use crate::{
+    AppSuccess,
+    guards::InternalRedirect
+};
 
-#[get("/?<menu>", rank=2)]
-pub fn get(context: &State<GlobalContext>, menu: Option<usize>) -> Template {
-    let mut context = context.local();
-    if let Some(menu_choice) = menu {
-        context.insert("menu", to_value(menu_choice).unwrap());
+pub struct Grace(pub u32);
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for Grace {
+    type Error = std::convert::Infallible;
+
+    async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
+        let grace = req.rocket().config().shutdown.grace;
+        Outcome::Success(Grace(grace))
+    }
+}
+
+#[get("/status/<redirect>", rank = 2)]
+pub fn get(grace: Grace, state: &State<AppSuccess>, redirect: Option<InternalRedirect>) -> Template {
+    warn!("ASKING SHUTDOWN: {}", grace.0);
+    let mut context = state.context();
+
+    if let Some(redirect) = redirect {
+        context.insert_string("redirect", redirect.as_base64())
     }
     Template::render("setup", &context)
 }

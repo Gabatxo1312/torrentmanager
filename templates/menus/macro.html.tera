@@ -2,7 +2,7 @@
         <nav class="navbar fa-2x" role="navigation" aria-label="main navigation" style="max-width: 900px; margin: auto; justify-content: center; height: 6rem;">
 {% if branding %}
             <div class="navbar-brand">
-                <a class="navbar-item" href="index.php">
+                <a class="navbar-item" href="/">
                     <img src="/assets/images/torrentmanager_flat.png" style="height: 100%; max-height: 2em;">
                 </a>
             </div>

@@ -1,0 +1,16 @@
+{% extends "base" %}
+
+{% block extra_head %}
+<meta http-equiv="refresh" content="5; url={{ redirect }}">
+{% endblock extra_head %}
+
+{% block main %}
+<div style="text-align: center; margin: auto;">
+    <h1 class="title">Restarting TorrentManager</h1>
+    <article class="message is-info" style="max-width: 600px; margin: auto;">
+      <div class="message-header is-size-5">
+        <p>Please wait while the service is restarting...</p>
+      </div>
+    </article>
+</div>
+{% endblock %}

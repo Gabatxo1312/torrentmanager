@@ -1,4 +1,16 @@
 {% extends "base" %}
+{% macro success(message) %}
+<li><i class="fa fa-angellist"></i>&nbsp;&nbsp;{{ message }}</li>
+{% endmacro success %}
+
+{% macro error(message) %}
+<li class="has-text-danger"><i class="fa fa-times-circle"></i>&nbsp;&nbsp;{{ message }}</li>
+{% endmacro error %}
+
+{% macro successorerror(val, ok, fail) %}
+{% if val %}{{ self::success(message=suc) }}
+{% else %}{{ self::error(message=fail) }}{% endif %}
+{% endmacro %}
 
 {% block main %}
 <div style="text-align: center; margin: auto;">
@@ -9,11 +21,27 @@
       </div>
       <div class="message-body">
         <ul class="is-flex is-flex-direction-column has-text-left is-size-5">
-                    <li><i class="fa fa-angellist"></i> TorrentManager is up and running</li>
-                    <li{% if not is_qbt_setup %} class="has-text-danger"{% endif %}><i class="fa {% if is_qbt_setup %}fa-angellist{% else %}fa-times-circle{% endif %}"></i> qbt is setup properly</li>
-                    <li{% if not is_database_loaded %} class="has-text-danger"{% endif %}><i class="fa {% if is_database_loaded %}fa-angellist{% else %}fa-times-circle {% endif %}"></i> Collections have been configured</li>
+            {{ self::success(message="TorrentManager is up and running") }}
+            {% if is_config_loaded %}
+                {{ self::success(message="Configuration has been loaded") }}
+            {% else %}
+                {{ self::error(message="Configuration failed to load (see errors above)") }}
+            {% endif %}{% if is_database_loaded %}
+                {{ self::success(message="Collections database has been loaded") }}
+            {% else %}
+                {{ self::error(message="Collections database failed to load (see errors above)") }}
+            {% endif %}
+            {{ self::successorerror(val=is_qbt_loaded, ok="qBittorrent is reachable", fail="Cannot contact qBittorrent API") }}
         </ul>
+
+        <br>
+        <div class="control" style="text-align: center;">
+            <a href="/setup/restart{% if redirect %}/{{ redirect }}{% endif %}" class="button is-success">Try reloading config</a>
+        </div>
       </div>
     </article>
 </div>
+{% endblock %}
+
+{% block footer %}
 {% endblock %}

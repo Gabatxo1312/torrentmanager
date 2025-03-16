@@ -1,0 +1,38 @@
+{% extends "base" %}
+
+{% block extra_head %}
+{# If there's only one torrent, and its status is not finished, reload regularly #}
+{% if torrents|length == 1 %}
+{% set torrent = torrents|first %}
+{% if torrent.progress < 100 %}<meta http-equiv="refresh" content="5; url=/progress/hash/{{ torrent.id }}">{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block main %}
+<div style="text-align: center; margin: auto;">
+    <h1 class="title">Progress</h1>
+    {% if progress_menu %}{{ menus::macro(entries = progress_menu, branding = false) }}{% endif %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Progress</th>
+                <th>Size</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+    {% for entry in torrents | sort(attribute="date_start") | reverse %}
+        <tr>
+            <td>{% if entry.progress == 100 %}<i class="fa fa-angellist"></i>{% else %}{{ entry.progress }}%{% endif %}</td>
+            <td>{% if entry.size < 0 %}?{% else %}{{ entry.size | filesizeformat }}{% endif %}</td>
+            <td><a href="/progress/hash/{{ entry.id }}">{{ entry.name }}</a></td>
+        </tr>
+    {% else %}
+        {% if errors %}
+        <h2>Could not reach Bittorrent client (see errors above)</h2>
+        {% else %}
+        <h2>No content yet!</h2>
+        {% endif %}
+    {% endfor %}
+    </table>
+</div>
+{% endblock %}

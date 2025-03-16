@@ -1,2 +1,3 @@
 {% set entries = menu(entries = [ "progress", "logs" ]) %}
 {{ menus::macro(entries = entries, branding=false) }}
+
