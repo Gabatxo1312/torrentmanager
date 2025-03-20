@@ -40,7 +40,6 @@ pub async fn get(state: &State<AppState>, _id: &str) -> Template {
 
 #[get("/")]
 pub async fn get_chores(state: &State<AppState>) -> Template {
-     let context = state.context();
+    let context = state.context();
     Template::render("progress", &context)
-
 }

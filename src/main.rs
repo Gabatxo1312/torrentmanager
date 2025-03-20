@@ -5,12 +5,12 @@ extern crate rocket;
 
 use torrentmanager::{
     routes::{router, setup_router},
-    state::{AppState},
+    state::AppState,
     templating::tera,
 };
 
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 async fn start() -> Result<rocket::Rocket<rocket::Ignite>, rocket::Error> {
     // Custom tera templating
@@ -42,7 +42,7 @@ async fn main() -> Result<(), rocket::Error> {
         std::env::set_var("RUST_LOG", "torrentmanager=debug,rocket=info");
     }
     pretty_env_logger::init();
-    
+
     info!("Starting TorrentManager");
 
     // Setup SIGTERM handler to stop restarting when service is stopped by systemd

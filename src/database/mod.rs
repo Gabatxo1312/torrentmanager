@@ -10,40 +10,76 @@ pub use save_paths::SavePathDB;
 mod uploads;
 pub use uploads::{UploadDB, UploadID, UploadPath};
 mod collections;
-pub use collections::{CollectionDB, Collection};
+pub use collections::{Collection, CollectionDB};
 
 #[derive(Debug, Snafu)]
 pub enum DatabaseError {
     #[snafu(display("Could not read collections basedir `{}`:\n{}", path.display(), source))]
-    NoBasedir { path: PathBuf, source: std::io::Error },
+    NoBasedir {
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[snafu(display("Failed to read collection entry `{}`:\n{}", path.display(), source))]
-    FailedEntry { path: PathBuf, source: std::io::Error },
+    FailedEntry {
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[snafu(display("Failed to read file `{}`:\n{}", path.display(), source))]
-    FailedAnonymousFile { path: PathBuf, source: std::io::Error },
+    FailedAnonymousFile {
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[snafu(display("Collection `{}` symlinks to a seemingly missing directory `{}`:\n{}", name, path.display(), source))]
-    BrokenCollectionSymlink { name: String, path: PathBuf, source: std::io::Error },
+    BrokenCollectionSymlink {
+        name: String,
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[snafu(display("Failed to read collections directory {}:\n{source}", path.display()))]
-    FailedReadCollection { path: PathBuf, source: std::io::Error },
+    FailedReadCollection {
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[snafu(display("Failed to read collection entry in collection {}:\n{source}", collection.display()))]
-    FailedReadCollectionEntry { collection: PathBuf, source: std::io::Error },
+    FailedReadCollectionEntry {
+        collection: PathBuf,
+        source: std::io::Error,
+    },
     #[snafu(display("Entry contains invalid UTF-8 characters: {}", osstring.to_string_lossy()))]
     FailedUnicode { osstring: std::ffi::OsString },
     #[snafu(display("Entry `{}` in collection `{}` symlinks to a seemingly missing directory:\n{}", path.display(), name, source))]
-    BrokenEntrySymlink { name: String, path: PathBuf, source: std::io::Error },
+    BrokenEntrySymlink {
+        name: String,
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[snafu(display("Could not find upload dir {}:\n{source}", path.display()))]
-    NoUploadDir { path: PathBuf, source: std::io::Error },
+    NoUploadDir {
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[snafu(display("Upload dir is not a folder: {}))", path.display()))]
     NotUploadDir { path: PathBuf },
     #[snafu(display("Failed to read upload dir:\n{source}"))]
     ReadUploadDir { source: std::io::Error },
     #[snafu(display("Failed to read upload dir entry {} at path {}:\n{}", id.to_string(), path.display(), source))]
-    ReadUploadDirEntry { id: UploadID, path: PathBuf, source: std::io::Error },
+    ReadUploadDirEntry {
+        id: UploadID,
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[snafu(display("Failed to write upload entry {path}:\n{source}"))]
-    WriteUploadDirEntry { path: String, source: std::io::Error },
+    WriteUploadDirEntry {
+        path: String,
+        source: std::io::Error,
+    },
     #[snafu(display("Invalid content id {id}"))]
     InvalidContentID { id: String },
     #[snafu(display("Could not find torrents_dir: {}", path.display()))]
-    NoTorrentDir { path: PathBuf, source: std::io::Error },
+    NoTorrentDir {
+        path: PathBuf,
+        source: std::io::Error,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -72,13 +108,22 @@ pub struct Database {
     pub collections: Vec<Collection>,
 }
 
-
 impl Database {
-    pub fn from_dirs(basedir: &Path, upload_dir: &Path, torrents_dir: &Path) -> Result<Database, DatabaseError> {
+    pub fn from_dirs(
+        basedir: &Path,
+        upload_dir: &Path,
+        torrents_dir: &Path,
+    ) -> Result<Database, DatabaseError> {
         // Check that folders exist
-        let basedir = basedir.canonicalize().context(NoBasedirSnafu { path: basedir.to_path_buf() })?;
-        let upload_dir = upload_dir.canonicalize().context(NoUploadDirSnafu { path: upload_dir.to_path_buf() })?;
-        let torrents_dir = torrents_dir.canonicalize().context(NoTorrentDirSnafu { path: torrents_dir.to_path_buf() })?;
+        let basedir = basedir.canonicalize().context(NoBasedirSnafu {
+            path: basedir.to_path_buf(),
+        })?;
+        let upload_dir = upload_dir.canonicalize().context(NoUploadDirSnafu {
+            path: upload_dir.to_path_buf(),
+        })?;
+        let torrents_dir = torrents_dir.canonicalize().context(NoTorrentDirSnafu {
+            path: torrents_dir.to_path_buf(),
+        })?;
         if upload_dir.is_dir() {
             Ok(Database {
                 collections: CollectionDB::load(&basedir)?,
@@ -89,7 +134,9 @@ impl Database {
                 torrents_dir: torrents_dir.to_path_buf(),
             })
         } else {
-            Err(DatabaseError::NotUploadDir { path: upload_dir.to_path_buf() })
+            Err(DatabaseError::NotUploadDir {
+                path: upload_dir.to_path_buf(),
+            })
         }
     }
 
@@ -104,7 +151,6 @@ impl Database {
     pub fn collections(&self) -> CollectionDB {
         CollectionDB::with(&self.collections)
     }
-
 }
 
 pub struct Cache {

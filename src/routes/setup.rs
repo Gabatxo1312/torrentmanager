@@ -1,12 +1,9 @@
-use rocket::State;
 use rocket::outcome::Outcome;
-use rocket::request::{self, Request, FromRequest};
+use rocket::request::{self, FromRequest, Request};
+use rocket::State;
 use rocket_dyn_templates::Template;
 
-use crate::{
-    AppSuccess,
-    guards::InternalRedirect
-};
+use crate::{guards::InternalRedirect, AppSuccess};
 
 pub struct Grace(pub u32);
 
@@ -21,7 +18,11 @@ impl<'r> FromRequest<'r> for Grace {
 }
 
 #[get("/status/<redirect>", rank = 2)]
-pub fn get(grace: Grace, state: &State<AppSuccess>, redirect: Option<InternalRedirect>) -> Template {
+pub fn get(
+    grace: Grace,
+    state: &State<AppSuccess>,
+    redirect: Option<InternalRedirect>,
+) -> Template {
     warn!("ASKING SHUTDOWN: {}", grace.0);
     let mut context = state.context();
 

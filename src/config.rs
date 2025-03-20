@@ -39,6 +39,9 @@ pub struct Config {
     pub torrents_dir: PathBuf,
     /// The configuration for the bittorrent API client
     pub qbittorrent: QBittorrentConfig,
+    /// Where to look for deleted torrents
+    #[serde(default)]
+    pub torrent_locations: Vec<PathBuf>,
 }
 
 impl Config {

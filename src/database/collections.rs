@@ -1,5 +1,5 @@
-use snafu::prelude::*;
 use serde::Serialize;
+use snafu::prelude::*;
 
 use std::path::{Path, PathBuf};
 
@@ -10,11 +10,9 @@ pub struct CollectionDB<'a> {
     collections: &'a [Collection],
 }
 
-impl <'a> CollectionDB<'a> {
+impl<'a> CollectionDB<'a> {
     pub fn with(collections: &'a [Collection]) -> CollectionDB<'a> {
-        CollectionDB {
-            collections,
-        }
+        CollectionDB { collections }
     }
 
     pub fn list(&'a self) -> &'a [Collection] {
@@ -31,20 +29,26 @@ impl <'a> CollectionDB<'a> {
 
     pub fn load(basedir: &Path) -> Result<Vec<Collection>, DatabaseError> {
         let mut collections: Vec<Collection> = Vec::new();
-        for entry in std::fs::read_dir(basedir).context(NoBasedirSnafu { path: basedir.to_path_buf() })? {
-            let entry = entry.context(FailedAnonymousFileSnafu { path: basedir.to_path_buf() })?;
+        for entry in std::fs::read_dir(basedir).context(NoBasedirSnafu {
+            path: basedir.to_path_buf(),
+        })? {
+            let entry = entry.context(FailedAnonymousFileSnafu {
+                path: basedir.to_path_buf(),
+            })?;
             let name = entry.file_name().into_string().unwrap();
-            let path = entry.path().canonicalize().context(BrokenEntrySymlinkSnafu { name: &name, path: entry.path() })?;
+            let path = entry
+                .path()
+                .canonicalize()
+                .context(BrokenEntrySymlinkSnafu {
+                    name: &name,
+                    path: entry.path(),
+                })?;
             let collection = Collection { name, path };
             collections.push(collection);
         }
         Ok(collections)
     }
-
 }
-
-
-
 
 #[derive(Clone, Debug, Serialize)]
 /// A Collection is a folder in the collections_dir
@@ -57,12 +61,18 @@ impl Collection {
     /// Get the top-level folders in a collection
     pub fn folders(&self) -> Result<Vec<String>, DatabaseError> {
         let mut entries: Vec<String> = Vec::new();
-        for entry in std::fs::read_dir(&self.path).context(FailedReadCollectionSnafu { path: self.path.clone() })? {
-            let entry = entry.context(FailedReadCollectionEntrySnafu { collection: self.path.clone() })?;
+        for entry in std::fs::read_dir(&self.path).context(FailedReadCollectionSnafu {
+            path: self.path.clone(),
+        })? {
+            let entry = entry.context(FailedReadCollectionEntrySnafu {
+                collection: self.path.clone(),
+            })?;
             if let Some(name) = entry.file_name().to_str() {
                 entries.push(name.to_string());
             } else {
-                return Err(DatabaseError::FailedUnicode { osstring: entry.file_name() });
+                return Err(DatabaseError::FailedUnicode {
+                    osstring: entry.file_name(),
+                });
             }
         }
         Ok(entries)

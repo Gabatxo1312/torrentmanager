@@ -19,17 +19,22 @@ pub struct SavePathDB<'a> {
     basedir: &'a Path,
 }
 
-impl <'a> SavePathDB<'a> {
+impl<'a> SavePathDB<'a> {
     pub fn from(basedir: &'a Path) -> SavePathDB<'a> {
-        SavePathDB {
-            basedir
-        }
+        SavePathDB { basedir }
     }
 
     /// Calculates the path where qBittorrent will store a torrent... by taking the hash
     pub fn compute(&self, id: &UploadID) -> TorrentSavePath {
         let path = PathBuf::from(id.as_ref().to_lowercase());
-        let hash = path.file_name().unwrap().to_str().unwrap().split('.').next().unwrap();
+        let hash = path
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .split('.')
+            .next()
+            .unwrap();
         TorrentSavePath(self.basedir.join(hash).to_str().unwrap().to_string())
     }
 }

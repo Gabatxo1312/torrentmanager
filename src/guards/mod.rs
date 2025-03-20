@@ -1,8 +1,8 @@
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::{uri::Origin, Status};
+use rocket::request::FromParam;
 use rocket::request::{self, FromRequest, Outcome, Request};
 use rocket::Data;
-use rocket::request::FromParam;
 
 use std::convert::Infallible;
 use std::str::FromStr;
@@ -52,12 +52,13 @@ impl<'r> FromParam<'r> for InternalRedirect {
 impl InternalRedirect {
     pub fn from_base64(s: &str) -> Result<Self, NoInternalRedirect> {
         let redirect_str = String::from_utf8(
-            base64_url::decode(&s).map_err(|_e| NoInternalRedirect::InvalidBase64)?
-        ).map_err(|_e| NoInternalRedirect::InvalidBase64)?;
+            base64_url::decode(&s).map_err(|_e| NoInternalRedirect::InvalidBase64)?,
+        )
+        .map_err(|_e| NoInternalRedirect::InvalidBase64)?;
 
-        Self::from_str(&redirect_str)        
+        Self::from_str(&redirect_str)
     }
-    
+
     pub fn as_base64(&self) -> String {
         base64_url::encode(&self.0.to_string())
     }
@@ -71,7 +72,7 @@ impl ToString for InternalRedirect {
 
 impl FromStr for InternalRedirect {
     type Err = NoInternalRedirect;
-    
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.starts_with("/") {
             let origin = Origin::parse_owned(s.to_string()).unwrap();
@@ -83,7 +84,7 @@ impl FromStr for InternalRedirect {
 }
 
 /// Redirect requests to status page, except assets.
-/// 
+///
 /// This fairing is only run when normal startup is not successful in [torrentmanager::routes::start].
 /// It redirects all queries to the `/setup` route, where a restart button will take the user to their
 /// intended page once setup is completed.
@@ -106,11 +107,12 @@ impl Fairing for RestartRedirect {
             let req_uri = req.uri().to_string();
             let req_path = req.uri().path();
 
-            if ! (req_path.starts_with("/assets") || req_path.starts_with("/setup")) {
+            if !(req_path.starts_with("/assets") || req_path.starts_with("/setup")) {
                 info!("Changing request URL for /setup");
                 let encoded_uri = base64_url::encode(&req_uri);
                 info!("Request URI B64: {}", encoded_uri);
-                let new_uri = Origin::parse_owned(format!("/setup/status/{}", encoded_uri)).unwrap();
+                let new_uri =
+                    Origin::parse_owned(format!("/setup/status/{}", encoded_uri)).unwrap();
                 info!("New URL: {}", new_uri);
                 req.set_uri(new_uri);
             }

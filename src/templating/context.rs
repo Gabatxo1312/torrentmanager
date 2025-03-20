@@ -27,19 +27,15 @@ impl Context {
         }
     }
 
-//    pub fn error<T: ToString>(&mut self, value: T) {
-//        self.errors.push(value.to_string());
-//    }
+    //    pub fn error<T: ToString>(&mut self, value: T) {
+    //        self.errors.push(value.to_string());
+    //    }
     pub fn error<T: ToString>(&mut self, value: T) {
-        self.errors.push(
-            value.to_string().replace('\n', "<br>")
-        );
+        self.errors.push(value.to_string().replace('\n', "<br>"));
     }
 
     pub fn warning<T: ToString>(&mut self, value: T) {
-        self.warnings.push(
-            value.to_string().replace('\n', "<br>")
-        );
+        self.warnings.push(value.to_string().replace('\n', "<br>"));
     }
 
     pub fn error_owned(&mut self, value: String) {
@@ -47,7 +43,7 @@ impl Context {
     }
 
     pub fn has_errors(&self) -> bool {
-        ! self.errors.is_empty()
+        !self.errors.is_empty()
     }
 
     pub fn insert(&mut self, key: &str, value: Value) {
@@ -59,12 +55,12 @@ impl Context {
     }
 
     pub fn insert_string<T: AsRef<str>>(&mut self, key: &str, value: T) {
-        self.extra.insert(key.to_string(), to_value(value.as_ref()).unwrap());
+        self.extra
+            .insert(key.to_string(), to_value(value.as_ref()).unwrap());
     }
 
     pub fn insert_vec<T: serde::Serialize>(&mut self, key: &str, value: Vec<T>) {
-        self.extra.insert(key.to_string(), to_value(&value).unwrap());
+        self.extra
+            .insert(key.to_string(), to_value(&value).unwrap());
     }
 }
-
-

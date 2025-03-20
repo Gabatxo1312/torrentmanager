@@ -9,4 +9,3 @@ pub fn get(state: &State<AppState>) -> Template {
     let context = state.context();
     Template::render("upload/index", &context)
 }
-

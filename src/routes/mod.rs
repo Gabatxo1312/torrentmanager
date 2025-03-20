@@ -1,4 +1,4 @@
-use rocket::config::{Config as RocketConfig, Sig as RocketSig, Shutdown as RocketShutdown};
+use rocket::config::{Config as RocketConfig, Shutdown as RocketShutdown, Sig as RocketSig};
 
 pub mod chores;
 pub mod progress;
@@ -38,8 +38,8 @@ pub fn router() -> rocket::Rocket<rocket::Build> {
         .mount("/upload", upload()) // Upload page
         .mount("/progress", progress())
         .mount("/chores", chores())
-        // .mount("/setup", setup())
-        // .mount("/setup/restart", routes![restart::index])
+    // .mount("/setup", setup())
+    // .mount("/setup/restart", routes![restart::index])
 }
 
 /// The router for when launch was not successfuly, just exposes /setup as / and /restart to

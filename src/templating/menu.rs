@@ -1,5 +1,5 @@
-use rocket_dyn_templates::tera::{Function as TeraFunction, Result as TeraResult, Value};
 use rocket_dyn_templates::tera::{from_value, to_value};
+use rocket_dyn_templates::tera::{Function as TeraFunction, Result as TeraResult, Value};
 
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -22,37 +22,43 @@ impl FromStr for MenuEntry {
                 link: "/collections".to_string(),
                 icon: "fa-dropbox".to_string(),
                 name: "Collections".to_string(),
-            }), "progress" => Ok(MenuEntry {
+            }),
+            "progress" => Ok(MenuEntry {
                 link: "/progress".to_string(),
                 icon: "fa-spinner".to_string(),
                 name: "Progress".to_string(),
-            }), "logs" => Ok(MenuEntry {
+            }),
+            "logs" => Ok(MenuEntry {
                 link: "/logs".to_string(),
                 icon: "fa-file-text-o".to_string(),
                 name: "Logs".to_string(),
-            }), "translations" => Ok(MenuEntry {
+            }),
+            "translations" => Ok(MenuEntry {
                 link: "/translations".to_string(),
                 icon: "fa-language".to_string(),
                 name: "Translations".to_string(),
-            }), "upload" => Ok(MenuEntry {
+            }),
+            "upload" => Ok(MenuEntry {
                 link: "/upload".to_string(),
                 icon: "fa-plus-square".to_string(),
                 name: "Upload".to_string(),
-            }), "reviews" => Ok(MenuEntry {
+            }),
+            "reviews" => Ok(MenuEntry {
                 link: "/reviews".to_string(),
                 icon: "fa-stethoscope".to_string(),
                 name: "Reviews".to_string(),
-            }), "chores1" => Ok(MenuEntry {
+            }),
+            "chores1" => Ok(MenuEntry {
                 link: "/chores".to_string(),
                 icon: "fa-medkit".to_string(),
                 name: "Chores".to_string(),
-            }), "chores2" => Ok(MenuEntry {
+            }),
+            "chores2" => Ok(MenuEntry {
                 link: "/chores".to_string(),
                 icon: "fa-textpattern".to_string(),
                 name: "Chores".to_string(),
-            }), _ => {
-                Err(format!("Unknown menu entry: {}", s))
-            }
+            }),
+            _ => Err(format!("Unknown menu entry: {}", s)),
         }
     }
 }
@@ -81,7 +87,10 @@ impl TeraFunction for MenuFn {
             Vec<String>,
             args.get("entries"),
             "`` requires an `entries` argument with a list of string values"
-        ).iter().map(|x| MenuEntry::from_str(x).expect(&format!("Invalid menu entry {}", x))).collect();
+        )
+        .iter()
+        .map(|x| MenuEntry::from_str(x).expect(&format!("Invalid menu entry {}", x)))
+        .collect();
 
         Ok(to_value(&entries).unwrap())
     }
