@@ -3,6 +3,9 @@ use snafu::prelude::*;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 
+use crate::config::DirConfig;
+use crate::utils::read_dir::ReadDirError;
+use crate::utils::writable_dir::{ensure_writable_dir, WritableDirError};
 use crate::AppState;
 
 mod save_paths;
@@ -14,70 +17,80 @@ pub use collections::{Collection, CollectionDB};
 
 #[derive(Debug, Snafu)]
 pub enum DatabaseError {
-    #[snafu(display("Could not read collections basedir `{}`:\n{}", path.display(), source))]
-    NoBasedir {
-        path: PathBuf,
-        source: std::io::Error,
+    #[snafu(display("Collections dir is not writable:\n{}", source))]
+    Collections {
+        source: WritableDirError,
     },
-    #[snafu(display("Failed to read collection entry `{}`:\n{}", path.display(), source))]
-    FailedEntry {
-        path: PathBuf,
-        source: std::io::Error,
+    #[snafu(display("Uploads dir is not writable:\n{}", source))]
+    Uploads {
+        source: WritableDirError,
     },
-    #[snafu(display("Failed to read file `{}`:\n{}", path.display(), source))]
-    FailedAnonymousFile {
-        path: PathBuf,
-        source: std::io::Error,
+    #[snafu(display("Downloads dir is not writable:\n{}", source))]
+    Downloads {
+        source: WritableDirError,
     },
-    #[snafu(display("Collection `{}` symlinks to a seemingly missing directory `{}`:\n{}", name, path.display(), source))]
-    BrokenCollectionSymlink {
-        name: String,
-        path: PathBuf,
-        source: std::io::Error,
+
+    #[snafu(display("{source}"))]
+    ReadDir {
+        source: ReadDirError,
     },
-    #[snafu(display("Failed to read collections directory {}:\n{source}", path.display()))]
-    FailedReadCollection {
-        path: PathBuf,
-        source: std::io::Error,
+    #[snafu(display("Failed to persist upload: {source}"))]
+    PersistUpload {
+        source: WritableDirError,
     },
-    #[snafu(display("Failed to read collection entry in collection {}:\n{source}", collection.display()))]
-    FailedReadCollectionEntry {
-        collection: PathBuf,
-        source: std::io::Error,
-    },
-    #[snafu(display("Entry contains invalid UTF-8 characters: {}", osstring.to_string_lossy()))]
-    FailedUnicode { osstring: std::ffi::OsString },
-    #[snafu(display("Entry `{}` in collection `{}` symlinks to a seemingly missing directory:\n{}", path.display(), name, source))]
-    BrokenEntrySymlink {
-        name: String,
-        path: PathBuf,
-        source: std::io::Error,
-    },
-    #[snafu(display("Could not find upload dir {}:\n{source}", path.display()))]
-    NoUploadDir {
-        path: PathBuf,
-        source: std::io::Error,
-    },
-    #[snafu(display("Upload dir is not a folder: {}))", path.display()))]
-    NotUploadDir { path: PathBuf },
-    #[snafu(display("Failed to read upload dir:\n{source}"))]
-    ReadUploadDir { source: std::io::Error },
-    #[snafu(display("Failed to read upload dir entry {} at path {}:\n{}", id.to_string(), path.display(), source))]
-    ReadUploadDirEntry {
-        id: UploadID,
-        path: PathBuf,
-        source: std::io::Error,
-    },
-    #[snafu(display("Failed to write upload entry {path}:\n{source}"))]
-    WriteUploadDirEntry {
-        path: String,
-        source: std::io::Error,
-    },
+
+    // #[snafu(display("Failed to list directory entries in `{}`:\n{}", path.display(), source))]
+    // ReadDir { path: PathBuf, source: std::io::Error },
+    // #[snafu(display("Failed to read directory entry `{}`:\n{}", path.display(), source))]
+    // ReadEntry { path: PathBuf, source: std::io::Error },
+
+    // BELOW ARE OLD ERRORS TO BE REPLACED
+    // #[snafu(display("Failed to read directory entry `{}`:\n{}", path.display(), source))]
+    // FailedEntry {
+    //     path: PathBuf,
+    //     source: std::io::Error,
+    // },
+    // #[snafu(display("Failed to read file `{}`:\n{}", path.display(), source))]
+    // FailedAnonymousFile {
+    //     path: PathBuf,
+    //     source: std::io::Error,
+    // },
+    // #[snafu(display("Failed to read collections directory {}:\n{source}", path.display()))]
+    // FailedReadCollection {
+    //     path: PathBuf,
+    //     source: std::io::Error,
+    // },
+    // #[snafu(display("Failed to read collection entry in collection {}:\n{source}", collection.display()))]
+    // FailedReadCollectionEntry {
+    //     collection: PathBuf,
+    //     source: std::io::Error,
+    // },
+    // #[snafu(display("Entry contains invalid UTF-8 characters: {}", osstring.to_string_lossy()))]
+    // FailedUnicode {
+    //     osstring: std::ffi::OsString,
+    // },
+    // #[snafu(display("Entry `{}` in collection `{}` symlinks to a seemingly missing directory:\n{}", path.display(), name, source))]
+    // BrokenEntrySymlink {
+    //     name: String,
+    //     path: PathBuf,
+    //     source: std::io::Error,
+    // },
+    // ReadUploadDir {
+    //     source: std::io::Error,
+    // },
+    // #[snafu(display("Failed to read upload dir entry {} at path {}:\n{}", id.to_string(), path.display(), source))]
+    // ReadUploadDirEntry {
+    //     id: UploadID,
+    //     path: PathBuf,
+    //     source: std::io::Error,
+    // },
     #[snafu(display("Invalid content id {id}"))]
-    InvalidContentID { id: String },
-    #[snafu(display("Could not find torrents_dir: {}", path.display()))]
-    NoTorrentDir {
-        path: PathBuf,
+    InvalidContentID {
+        id: String,
+    },
+    #[snafu(display("An unknown error occurred accessing {}: {}", path.display(), source))]
+    Unknown {
+        path: std::path::PathBuf,
         source: std::io::Error,
     },
 }
@@ -95,61 +108,37 @@ pub enum DatabaseError {
 ///   - torrent save paths as consumed by the torrent clients using [`SavePathDB`] (see
 ///   [`Database::save_paths`]
 pub struct Database {
-    /// Where the database files are stored on disk
-    pub basedir: PathBuf,
+    dirs: DirConfig,
     /// The number of seconds to wait before refreshing the database entries
     pub ttl: usize,
-    /// The collections found in the database, hidden behind an Arc<RwLock>> to enable read-write multithreading
-    /// The entries are stored as an Option<Vec<Collection>> which is none as long as the loading fails
-    //pub collections: Arc<RwLock<Vec<Collection>>>,
-    pub upload_dir: PathBuf,
-    pub torrents_dir: PathBuf,
     // TEMPORARY: place in Cache
-    pub collections: Vec<Collection>,
+    pub collections: CollectionDB,
 }
 
 impl Database {
-    pub fn from_dirs(
-        basedir: &Path,
-        upload_dir: &Path,
-        torrents_dir: &Path,
-    ) -> Result<Database, DatabaseError> {
-        // Check that folders exist
-        let basedir = basedir.canonicalize().context(NoBasedirSnafu {
-            path: basedir.to_path_buf(),
-        })?;
-        let upload_dir = upload_dir.canonicalize().context(NoUploadDirSnafu {
-            path: upload_dir.to_path_buf(),
-        })?;
-        let torrents_dir = torrents_dir.canonicalize().context(NoTorrentDirSnafu {
-            path: torrents_dir.to_path_buf(),
-        })?;
-        if upload_dir.is_dir() {
-            Ok(Database {
-                collections: CollectionDB::load(&basedir)?,
-                basedir,
-                ttl: 60, // TODO
-                upload_dir,
-                // TODO: missing torrents dir error
-                torrents_dir: torrents_dir.to_path_buf(),
-            })
-        } else {
-            Err(DatabaseError::NotUploadDir {
-                path: upload_dir.to_path_buf(),
-            })
-        }
+    pub fn from_dirs(dirs: &DirConfig) -> Result<Database, DatabaseError> {
+        // Check that folders exist and are writable
+        ensure_writable_dir(&dirs.collections).context(CollectionsSnafu)?;
+        ensure_writable_dir(&dirs.uploads).context(UploadsSnafu)?;
+        ensure_writable_dir(&dirs.downloads).context(DownloadsSnafu)?;
+
+        Ok(Database {
+            dirs: dirs.clone(),
+            ttl: 60,
+            collections: CollectionDB::load(&dirs.collections)?,
+        })
     }
 
     pub fn uploads(&self) -> UploadDB {
-        UploadDB::from(&self.upload_dir)
+        UploadDB::from(&self.dirs.uploads)
     }
 
     pub fn save_paths(&self) -> SavePathDB {
-        SavePathDB::from(&self.torrents_dir)
+        SavePathDB::from(&self.dirs.downloads)
     }
 
     pub fn collections(&self) -> CollectionDB {
-        CollectionDB::with(&self.collections)
+        self.collections.clone()
     }
 }
 

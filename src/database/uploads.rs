@@ -6,6 +6,7 @@ use std::str::FromStr;
 
 //use crate::database::DatabaseError;
 use crate::database::*;
+use crate::utils::writable_dir::*;
 
 /// A UploadID represents a torrent/magnet hosted in the upload dir.
 /// It does not need to exist, but ensures that no illegal characters
@@ -237,23 +238,13 @@ impl<'a> UploadDB<'a> {
         Ok(path.is_file())
     }
 
-    pub fn load_upload(&self, entry: &UploadID) -> Result<String, DatabaseError> {
-        let path = self.upload_path(entry);
-        std::fs::read_to_string(&path).context(ReadUploadDirEntrySnafu {
-            id: entry.clone(),
-            path: path,
-        })
-    }
-
     pub fn persist_upload(&self, entry: &UploadID, content: &str) -> Result<(), DatabaseError> {
         if self.has_upload(&entry)? {
             println!("Entry already present: {}", entry.to_string());
             Ok(())
         } else {
             let path = self.upload_path(entry);
-            std::fs::write(&path, content).context(WriteUploadDirEntrySnafu {
-                path: entry.to_string(),
-            })?;
+            save_to_writable_dir(&path, content).context(PersistUploadSnafu)?;
             Ok(())
         }
     }
@@ -268,9 +259,7 @@ impl<'a> UploadDB<'a> {
             Ok(())
         } else {
             let path = self.upload_path(entry);
-            std::fs::copy(source, &path).context(WriteUploadDirEntrySnafu {
-                path: entry.to_string(),
-            })?;
+            copy_to_writable_dir(source, &path).context(PersistUploadSnafu)?;
             Ok(())
         }
     }

@@ -75,13 +75,9 @@ pub struct AppState {
 impl AppState {
     /// Loads the global state from CLI config file or default ./TorrentManager.toml
     pub async fn load() -> Result<AppState, AppSuccess> {
-        let config = Config::from_cli().map_err(|e| AppSuccess::FailedConfig(e))?;
-        let database = Database::from_dirs(
-            &config.collections_dir,
-            &config.uploads_dir,
-            &config.torrents_dir,
-        )
-        .map_err(|e| AppSuccess::FailedDatabase(e))?;
+        let config = Config::from_cli().map_err(|e| AppSuccess::FailedConfig(vec![e]))?;
+        let database =
+            Database::from_dirs(&config.dirs).map_err(|e| AppSuccess::FailedDatabase(e))?;
 
         let host = config.qbittorrent.format_host();
         let api = AsyncApiClient::login(
@@ -94,7 +90,7 @@ impl AppState {
 
         Ok(AppState {
             // For now hardcoded 60 seconds ttl
-            free_space: CachedState::new(FreeSpace::new(&config.torrents_dir), 60),
+            free_space: CachedState::new(FreeSpace::new(&config.dirs.downloads), 60),
             config,
             database,
             api,

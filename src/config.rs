@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::state::*;
-use crate::utils::xdg_config_file;
+use crate::utils::xdg::{config_file, data_dir};
 use crate::AppError;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -29,37 +29,63 @@ impl QBittorrentConfig {
     }
 }
 
+impl std::default::Default for QBittorrentConfig {
+    fn default() -> Self {
+        Self {
+            host: "localhost".to_string(),
+            port: 8080,
+            login: "admin".to_string(),
+            password: "adminadmin".to_string(),
+            default_location: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct DirConfig {
+    /// Collections directory containing symlinks to the collections.
+    ///
+    /// For example, ~/.local/share/torrentmanager/collections/séries -> /media/Vidéo/Séries/
+    ///
+    /// Determines the valid collections for new uploaded torrents, as well as the final directory
+    /// where to "extract" the torrent contents.
+    pub collections: PathBuf,
+    /// Upload directory where to store uploaded torrents/magnets.
+    pub uploads: PathBuf,
+    /// qBittorrent downloads directory, where torrents are stored in a folder named after their hash.
+    pub downloads: PathBuf,
+}
+
+impl std::default::Default for DirConfig {
+    fn default() -> DirConfig {
+        let data_dir = data_dir();
+        DirConfig {
+            collections: data_dir.join("collections"),
+            uploads: data_dir.join("uploads"),
+            downloads: data_dir.join("downloads"),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct Config {
-    /// The collections directory, relative to the configuration file
-    pub collections_dir: PathBuf,
-    /// The upload directory, relative to the configuration file
-    pub uploads_dir: PathBuf,
-    /// The qBittorrent downloads directory
-    pub torrents_dir: PathBuf,
-    /// The configuration for the bittorrent API client
-    pub qbittorrent: QBittorrentConfig,
-    /// Where to look for deleted torrents
+    /// Configuration for persistent directories
     #[serde(default)]
-    pub torrent_locations: Vec<PathBuf>,
+    pub dirs: DirConfig,
+    /// Configuration for the QBittorrent API client
+    pub qbittorrent: QBittorrentConfig,
 }
 
 impl Config {
     /// Loads config file in this order:
     ///   - if first argument: first argument or fail
-    ///   - if no argument: ./TorrentManager.toml then ~/.config/TorrentManager/TorrentManager.toml
-    pub fn from_cli() -> Result<Config, Vec<AppError>> {
+    ///   - if no argument: ~/.local/share/torrentmanager/TorrentManager.toml or ./TorrentManager.toml
+    pub fn from_cli() -> Result<Config, AppError> {
         if let Some(p) = args().into_iter().nth(1) {
             // Only try 1st argument, or fail
-            Self::from_file(p).map_err(|e| vec![e])
+            Self::from_file(p)
         } else {
-            if let Some(xdgcfg) = xdg_config_file("TorrentManager.toml") {
-                // Try ./TorrentManager.toml then ~/.config/TorrentManager/TorrentManager.toml
-                Self::from_files(vec![PathBuf::from("./TorrentManager.toml"), xdgcfg])
-            } else {
-                // Just try ./TorrentManager.toml
-                Self::from_file("./TorrentManager.toml").map_err(|e| vec![e])
-            }
+            Self::from_file(config_file("TorrentManager.toml"))
         }
     }
 
@@ -77,25 +103,5 @@ impl Config {
         toml::from_str(content).context(BrokenConfigError {
             path: identifier.to_path_buf(),
         })
-    }
-
-    /// from_files tries to lookup a list of possible config files.
-    /// If a config
-    pub fn from_files(paths: Vec<PathBuf>) -> Result<Config, Vec<AppError>> {
-        let mut errors: Vec<AppError> = Vec::new();
-        for path in &paths {
-            match std::fs::read_to_string(path).context(NoConfigError {
-                path: path.to_path_buf(),
-            }) {
-                Ok(c) => {
-                    // We found a config file... if it's broken we don't want to fallback to others
-                    return Self::from_str(&c, path).map_err(|e| vec![e]);
-                }
-                Err(e) => {
-                    errors.push(e);
-                }
-            }
-        }
-        Err(errors)
     }
 }
