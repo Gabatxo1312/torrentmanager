@@ -15,6 +15,9 @@ pub mod state;
 pub mod templating;
 pub mod utils;
 
+// Test
+pub mod series;
+
 pub use config::Config;
 pub use database::{Database, UploadID};
 pub use state::{AppError, AppState, AppSuccess};

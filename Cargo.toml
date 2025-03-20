@@ -36,6 +36,7 @@ tokio = { version = "1", features = [ "fs" ] }
 # Graceful shutdown
 signal-hook = "0.3"
 dirs = "6.0.0"
+regex = "1.11.1"
 
 [profile.release]
 strip = true
