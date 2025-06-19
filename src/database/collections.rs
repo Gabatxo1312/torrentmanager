@@ -17,7 +17,7 @@ impl CollectionDB {
     }
 
     pub fn has(&self, name: &str) -> bool {
-        self.list().iter().find(|x| x.name == name).is_some()
+        self.list().iter().any(|x| x.name == name)
     }
 
     pub fn get(&self, name: &str) -> Option<&Collection> {
@@ -59,6 +59,10 @@ impl TryFrom<ReadDirEntry> for Collection {
 impl Collection {
     /// Get the top-level folders in a collection
     pub fn folders(&self) -> Result<Vec<String>, DatabaseError> {
-        Ok(read_dir(&self.path).context(ReadDirSnafu)?.into_iter().map(|entry| entry.name).collect())
+        Ok(read_dir(&self.path)
+            .context(ReadDirSnafu)?
+            .into_iter()
+            .map(|entry| entry.name)
+            .collect())
     }
 }

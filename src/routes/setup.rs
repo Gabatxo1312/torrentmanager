@@ -1,33 +1,30 @@
-use rocket::outcome::Outcome;
-use rocket::request::{self, FromRequest, Request};
 use rocket::State;
 use rocket_dyn_templates::Template;
 
-use crate::{guards::InternalRedirect, AppSuccess};
+use crate::guards::InternalRedirect;
+use crate::state::{AppSetupState, FallibleState};
 
-pub struct Grace(pub u32);
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for Grace {
-    type Error = std::convert::Infallible;
-
-    async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
-        let grace = req.rocket().config().shutdown.grace;
-        Outcome::Success(Grace(grace))
-    }
+#[get("/<path..>", rank = 99)]
+pub async fn get(
+    // state: &State<FallibleState>,
+    state: AppSetupState,
+    path: std::path::PathBuf,
+) -> Template {
+    // Prepend / so we get internal redirection
+    let request_b64 = base64_url::encode(&format!("/{}", path.to_str().unwrap()));
+    info!("{}", request_b64);
+    let mut context = state.context().await;
+    context.insert_string("redirect", request_b64);
+    Template::render("setup", &context)
 }
 
-#[get("/status/<redirect>", rank = 2)]
-pub fn get(
-    grace: Grace,
-    state: &State<AppSuccess>,
-    redirect: Option<InternalRedirect>,
-) -> Template {
-    warn!("ASKING SHUTDOWN: {}", grace.0);
-    let mut context = state.context();
+#[get("/<redirect>")]
+/// Main upload form, when no data has been submitted yet
+pub async fn restart(state: &State<FallibleState>, redirect: InternalRedirect) -> Template {
+    state.reload().await;
 
-    if let Some(redirect) = redirect {
-        context.insert_string("redirect", redirect.as_base64())
-    }
-    Template::render("setup", &context)
+    let mut context = state.context().await;
+    context.insert_string("redirect", redirect.to_string());
+
+    Template::render("restart", &context)
 }

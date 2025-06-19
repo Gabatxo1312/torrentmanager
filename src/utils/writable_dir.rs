@@ -33,8 +33,9 @@ pub enum WritableDirError {
 pub fn is_dir_writable(path: &Path) -> Result<bool, WritableDirError> {
     assert!(path.is_dir());
 
-    let metadata = std::fs::metadata(path).context(UnknownSnafu {
+    let metadata = std::fs::metadata(path).map_err(|e| WritableDirError::Unknown {
         path: path.to_path_buf(),
+        source: e,
     })?;
 
     Ok(!metadata.permissions().readonly())
@@ -47,18 +48,16 @@ pub fn ensure_writable_dir(path: &Path) -> Result<(), WritableDirError> {
     if path.is_symlink() {
         match path.canonicalize() {
             Ok(resolved_path) => {
-                return ensure_writable_dir(&resolved_path)
+                ensure_writable_dir(&resolved_path)
                     .boxed()
                     .context(SymlinkSnafu {
                         path: path.to_path_buf(),
-                    });
+                    })
             }
-            Err(e) => {
-                return Err(WritableDirError::Symlink {
-                    path: path.to_path_buf(),
-                    source: Box::new(e),
-                });
-            }
+            Err(e) => Err(WritableDirError::Symlink {
+                path: path.to_path_buf(),
+                source: Box::new(e),
+            }),
         }
     } else if path.is_dir() {
         if is_dir_writable(path)? {

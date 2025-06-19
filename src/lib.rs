@@ -20,5 +20,5 @@ pub mod series;
 
 pub use config::Config;
 pub use database::{Database, UploadID};
-pub use state::{AppError, AppState, AppSuccess};
+pub use state::{AppError, AppSetupState, AppState};
 pub use templating::context::Context;

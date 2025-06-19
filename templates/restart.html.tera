@@ -1,7 +1,7 @@
 {% extends "base" %}
 
 {% block extra_head %}
-<meta http-equiv="refresh" content="5; url={{ redirect }}">
+<meta http-equiv="refresh" content="5; url={{ redirect | safe }}">
 {% endblock extra_head %}
 
 {% block main %}

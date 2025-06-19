@@ -14,11 +14,11 @@ pub enum UploadError {
     },
     #[snafu(display("Wrong uploaded torrent:\n{source}"))]
     WrongTorrent {
-        source: hightorrent::TorrentFileError,
+        source: hightorrent_api::hightorrent::TorrentFileError,
     },
     #[snafu(display("Wrong uploaded magnet:\n{source}"))]
     WrongMagnet {
-        source: hightorrent::MagnetLinkError,
+        source: hightorrent_api::hightorrent::MagnetLinkError,
     },
     #[snafu(display("Please give a torrent file or magnet URI"))]
     MissingTorrentOrMagnet,

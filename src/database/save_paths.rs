@@ -26,7 +26,7 @@ impl<'a> SavePathDB<'a> {
 
     /// Calculates the path where qBittorrent will store a torrent... by taking the hash
     pub fn compute(&self, id: &UploadID) -> TorrentSavePath {
-        let path = PathBuf::from(id.as_ref().to_lowercase());
+        let path = PathBuf::from(id.to_lowercase());
         let hash = path
             .file_name()
             .unwrap()

@@ -1,6 +1,5 @@
 use hightorrent_api::Api;
 use rocket::form::{Form, FromForm};
-use rocket::State;
 use rocket_dyn_templates::Template;
 use snafu::{OptionExt, ResultExt};
 
@@ -9,9 +8,11 @@ use crate::database::UploadPath;
 use crate::utils::unwrap_or_err;
 use crate::{AppState, Database, UploadID};
 
+use std::str::FromStr;
+
 #[post("/step2", data = "<form>")]
 /// Second form, when a magnet link was sent
-pub async fn post(mut form: Form<ConfirmForm<'_>>, state: &State<AppState>) -> Template {
+pub async fn post(mut form: Form<ConfirmForm<'_>>, state: AppState) -> Template {
     let mut context = state.context();
 
     match form.validate(&state).await {
@@ -61,7 +62,7 @@ impl ConfirmForm<'_> {
     ) -> Result<ValidConfirmForm, Vec<UploadError>> {
         let mut errors: Vec<UploadError> = Vec::new();
 
-        let verified_content = unwrap_or_err(self.verify_content(&state).await, &mut errors);
+        let verified_content = unwrap_or_err(self.verify_content(state).await, &mut errors);
         let _verified_collection =
             unwrap_or_err(self.verify_collection(&state.database), &mut errors);
         let verified_path = unwrap_or_err(self.verify_path(), &mut errors);
@@ -93,7 +94,7 @@ impl ConfirmForm<'_> {
         let _db_collection =
             database
                 .collections()
-                .get(&collection)
+                .get(collection)
                 .context(WrongCollectionError {
                     collection: collection.to_string(),
                 })?;
@@ -104,11 +105,17 @@ impl ConfirmForm<'_> {
         let content = self.content.unwrap();
         let upload_db = state.database.uploads();
 
-        let id = UploadID::from_str(&content).context(FailedDatabaseError)?;
+        let id = UploadID::from_str(content).context(FailedDatabaseError)?;
         if upload_db.has_upload(&id).context(FailedDatabaseError)? {
             let target = id.single_target();
             // Prevent duplicates
-            if let Some(_) = state.api.get(&target).await.context(UploadBackendError)? {
+            if state
+                .api
+                .get(&target)
+                .await
+                .context(UploadBackendError)?
+                .is_some()
+            {
                 Err(UploadError::DuplicateBackendTorrent { id: id.to_string() })
             } else {
                 Ok(id)

@@ -2,7 +2,7 @@ use rocket_dyn_templates::tera::{to_value, Value};
 
 use std::collections::HashMap;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Default, Serialize)]
 pub struct Context {
     pub errors: Vec<String>,
     pub warnings: Vec<String>,
@@ -11,17 +11,9 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new() -> Context {
-        Context {
-            errors: Vec::new(),
-            warnings: Vec::new(),
-            extra: HashMap::new(),
-        }
-    }
-
     pub fn from_error_slice(errors: &[String]) -> Context {
         Context {
-            errors: errors.iter().map(|x| x.clone()).collect(),
+            errors: errors.to_vec(),
             warnings: Vec::new(),
             extra: HashMap::new(),
         }

@@ -36,7 +36,7 @@
 
         <br>
         <div class="control" style="text-align: center;">
-            <a href="/setup/restart{% if redirect %}/{{ redirect }}{% endif %}" class="button is-success">Try reloading config</a>
+            <a href="/restart{% if redirect %}/{{ redirect }}{% endif %}" class="button is-success">Try reloading config</a>
         </div>
       </div>
     </article>

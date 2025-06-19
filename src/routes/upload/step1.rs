@@ -1,9 +1,8 @@
-use hightorrent::{MagnetLink, TorrentFile};
+use hightorrent_api::hightorrent::{MagnetLink, TorrentFile};
 use hightorrent_api::Api;
 use rocket::{
     form::{Form, FromForm},
     fs::TempFile,
-    State,
 };
 use rocket_dyn_templates::Template;
 use snafu::{OptionExt, ResultExt};
@@ -30,7 +29,7 @@ pub async fn torrent_hash<T: AsRef<Path>>(torrent: T) -> Result<String, UploadEr
 
 #[post("/", data = "<form>")]
 /// Second form, when a magnet link was sent
-pub async fn post(mut form: Form<UploadForm<'_>>, state: &State<AppState>) -> Template {
+pub async fn post(mut form: Form<UploadForm<'_>>, state: AppState) -> Template {
     let mut context = state.context();
 
     match form.validate(&state).await {
@@ -70,7 +69,7 @@ impl UploadForm<'_> {
         state: &AppState,
     ) -> Result<ValidUploadForm, Vec<UploadError>> {
         match (
-            self.verify_content(&state).await,
+            self.verify_content(state).await,
             self.verify_collection(&state.database),
         ) {
             (Ok(content), Ok(collection_folders)) => Ok(ValidUploadForm {
@@ -87,7 +86,7 @@ impl UploadForm<'_> {
     pub fn verify_collection(&self, database: &Database) -> Result<Vec<String>, UploadError> {
         let collection = self.collection.context(MissingCollectionError)?;
         let collections = database.collections();
-        let db_collection = collections.get(&collection).context(WrongCollectionError {
+        let db_collection = collections.get(collection).context(WrongCollectionError {
             collection: collection.to_string(),
         })?;
         let collection_entries = db_collection.folders().context(FailedDatabaseError)?;
@@ -100,7 +99,7 @@ impl UploadForm<'_> {
         let torrent = self.torrent.as_mut().unwrap();
         let upload_db = state.database.uploads();
 
-        match (magnet != "", torrent.len() != 0) {
+        match (!magnet.is_empty(), torrent.len() != 0) {
             (true, true) => Err(UploadError::BothTorrentAndMagnet),
             (true, false) => {
                 let hash = magnet_hash(magnet)?;
@@ -112,10 +111,14 @@ impl UploadForm<'_> {
                     .context(FailedDatabaseError)?;
                 // Prevent duplicates
                 let target = id.single_target();
-                if let Some(_) = state.api.get(&target).await.context(UploadBackendError)? {
-                    Err(UploadError::DuplicateBackendTorrent {
-                        id: id.as_str().to_string(),
-                    })
+                if state
+                    .api
+                    .get(&target)
+                    .await
+                    .context(UploadBackendError)?
+                    .is_some()
+                {
+                    Err(UploadError::DuplicateBackendTorrent { id: id.to_string() })
                 } else {
                     Ok(id)
                 }
@@ -135,7 +138,13 @@ impl UploadForm<'_> {
                     .context(FailedDatabaseError)?;
                 // Prevent duplicates
                 let target = id.single_target();
-                if let Some(_) = state.api.get(&target).await.context(UploadBackendError)? {
+                if state
+                    .api
+                    .get(&target)
+                    .await
+                    .context(UploadBackendError)?
+                    .is_some()
+                {
                     Err(UploadError::DuplicateBackendTorrent { id: id.to_string() })
                 } else {
                     Ok(id)

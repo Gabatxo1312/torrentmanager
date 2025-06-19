@@ -1,4 +1,4 @@
-use hightorrent::SingleTarget;
+use hightorrent_api::hightorrent::SingleTarget;
 use snafu::prelude::*;
 
 use std::path::{Path, PathBuf};
@@ -40,6 +40,29 @@ impl AsRef<str> for UploadID {
     }
 }
 
+impl AsRef<Path> for UploadID {
+    fn as_ref(&self) -> &Path {
+        self.complete.as_path()
+    }
+}
+
+impl std::str::FromStr for UploadID {
+    type Err = DatabaseError;
+
+    /// Used for passing UploadID around the system in stringy types (eg. in HTTP forms)
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.ends_with(".torrent") {
+            let hash = s.trim_end_matches(".torrent");
+            Self::torrent(hash)
+        } else if s.ends_with(".magnet") {
+            let hash = s.trim_end_matches(".magnet");
+            Self::magnet(hash)
+        } else {
+            Err(DatabaseError::InvalidContentID { id: s.to_string() })
+        }
+    }
+}
+
 impl UploadID {
     fn new(hash: &str, kind: UploadType) -> Result<UploadID, DatabaseError> {
         // TODO: make infohash typesafe by checking valid sha1/sha256...
@@ -49,7 +72,7 @@ impl UploadID {
                 id: hash.to_string(),
             })
         } else {
-            let mut complete_str = String::from(hash.to_lowercase());
+            let mut complete_str = hash.to_lowercase();
             complete_str.push_str(kind.as_ref());
             Ok(UploadID {
                 hash: hash.to_string(),
@@ -67,33 +90,8 @@ impl UploadID {
         Self::new(hash, UploadType::Torrent)
     }
 
-    /// Used for passing UploadID around the system in stringy types (eg. in HTTP forms)
-    pub fn from_str(s: &str) -> Result<UploadID, DatabaseError> {
-        if s.ends_with(".torrent") {
-            let hash = s.trim_end_matches(".torrent");
-            Self::torrent(&hash)
-        } else if s.ends_with(".magnet") {
-            let hash = s.trim_end_matches(".magnet");
-            Self::magnet(&hash)
-        } else {
-            Err(DatabaseError::InvalidContentID { id: s.to_string() })
-        }
-    }
-
     pub fn hash(&self) -> &str {
         &self.hash
-    }
-
-    pub fn as_str(&self) -> &str {
-        self.complete.as_str()
-    }
-
-    pub fn as_path(&self) -> &Path {
-        self.complete.as_path()
-    }
-
-    pub fn to_string(&self) -> String {
-        self.complete.to_string()
     }
 
     pub fn to_path_buf(&self) -> PathBuf {
@@ -125,8 +123,8 @@ impl UploadID {
             base64_url::unescape(&base64_url::encode(final_path.as_ref())).to_string(),
             collection.to_string(),
         ];
-        let path = state.database.uploads().upload_path(&self);
-        let save_path = state.database.save_paths().compute(&self);
+        let path = state.database.uploads().upload_path(self);
+        let save_path = state.database.save_paths().compute(self);
 
         let add = match self.kind {
             UploadType::Magnet => state
@@ -145,18 +143,24 @@ impl UploadID {
 
         add.send().await
     }
-}
 
-fn doesnt_traverse_path(path: &str) -> bool {
-    if path.starts_with('/') || path.contains("../") {
-        false
-    } else {
-        true
+    pub fn to_lowercase(&self) -> String {
+        self.complete.to_string().to_lowercase()
     }
 }
 
+impl std::fmt::Display for UploadID {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &self.complete)
+    }
+}
+
+fn doesnt_traverse_path(path: &str) -> bool {
+    !(path.starts_with('/') || path.contains("../"))
+}
+
 fn normalize_path(path: &str) -> String {
-    if path == "" {
+    if path.is_empty() {
         String::from(".")
     } else {
         path.to_string()
@@ -207,30 +211,37 @@ impl UploadPath {
         }
     }
 
-    pub fn to_string(&self) -> String {
-        self.0.to_string()
-    }
-
-    pub fn as_ref(&self) -> &str {
-        &self.0
-    }
-
     pub fn absolute(&self, upload_dir: &Path) -> PathBuf {
         upload_dir.join(&self.0)
     }
 }
 
-pub struct UploadDB<'a> {
-    basedir: &'a Path,
+impl std::fmt::Display for UploadPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &self.0)
+    }
 }
 
-impl<'a> UploadDB<'a> {
-    pub fn from(basedir: &'a Path) -> UploadDB<'a> {
-        UploadDB { basedir }
+impl AsRef<str> for UploadPath {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct UploadDB {
+    basedir: PathBuf,
+}
+
+impl UploadDB {
+    pub fn from(basedir: &Path) -> UploadDB {
+        UploadDB {
+            basedir: basedir.to_path_buf(),
+        }
     }
 
     pub fn upload_path(&self, entry: &UploadID) -> PathBuf {
-        self.basedir.join(&entry.to_string())
+        self.basedir.join(entry)
     }
 
     pub fn has_upload(&self, entry: &UploadID) -> Result<bool, DatabaseError> {
@@ -239,8 +250,8 @@ impl<'a> UploadDB<'a> {
     }
 
     pub fn persist_upload(&self, entry: &UploadID, content: &str) -> Result<(), DatabaseError> {
-        if self.has_upload(&entry)? {
-            println!("Entry already present: {}", entry.to_string());
+        if self.has_upload(entry)? {
+            println!("Entry already present: {entry}");
             Ok(())
         } else {
             let path = self.upload_path(entry);
@@ -254,8 +265,8 @@ impl<'a> UploadDB<'a> {
         entry: &UploadID,
         source: &Path,
     ) -> Result<(), DatabaseError> {
-        if self.has_upload(&entry)? {
-            println!("Entry already present: {}", entry.to_string());
+        if self.has_upload(entry)? {
+            println!("Entry already present: {entry}");
             Ok(())
         } else {
             let path = self.upload_path(entry);

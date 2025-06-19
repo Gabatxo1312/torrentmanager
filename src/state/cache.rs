@@ -15,6 +15,7 @@ pub trait ReloadableState {
 /// seconds. The cached state struct also needs to implement [`ReloadableState`].
 /// It is also assumed, for the moment, that reloading the state cannot fail, or will just not
 /// update the state.
+#[derive(Clone)]
 pub struct CachedState<T: ReloadableState> {
     state: Arc<RwLock<T>>,
 }

@@ -23,8 +23,8 @@
     {% for entry in torrents | sort(attribute="date_start") | reverse %}
         <tr>
             <td>{% if entry.progress == 100 %}<i class="fa fa-angellist"></i>{% else %}{{ entry.progress }}%{% endif %}</td>
-            <td>{% if entry.size < 0 %}?{% else %}{{ entry.size | filesizeformat }}{% endif %}</td>
-            <td><a href="/progress/hash/{{ entry.id }}">{{ entry.name }}</a></td>
+            <td class="is-right" align="right">{% if entry.size < 0 %}?{% else %}{{ entry.size | filesizeformat }}{% endif %}</td>
+            <td class="is-left" align="left"><a href="/progress/hash/{{ entry.id }}">{{ entry.name }}</a></td>
         </tr>
     {% else %}
         {% if errors %}
@@ -34,5 +34,21 @@
         {% endif %}
     {% endfor %}
     </table>
+    {% if files %}
+    <table class="table">
+        <thead>
+            <tr>
+                <td align="left">Torrent file</td>
+                <td align="left">Content symlink</td>
+            </tr>
+        </thead>
+    {% for entry in files %}
+        <tr>
+            <td align="left">{{ entry.path }}</td>
+            <td></td>
+        </tr>
+    {% endfor %}
+    </table>
+    {% endif %}
 </div>
 {% endblock %}

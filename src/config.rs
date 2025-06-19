@@ -81,7 +81,7 @@ impl Config {
     ///   - if first argument: first argument or fail
     ///   - if no argument: ~/.local/share/torrentmanager/TorrentManager.toml or ./TorrentManager.toml
     pub fn from_cli() -> Result<Config, AppError> {
-        if let Some(p) = args().into_iter().nth(1) {
+        if let Some(p) = args().nth(1) {
             // Only try 1st argument, or fail
             Self::from_file(p)
         } else {

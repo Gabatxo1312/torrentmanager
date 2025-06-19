@@ -5,6 +5,7 @@ use std::str::FromStr;
 
 use super::ReloadableState;
 
+#[derive(Clone)]
 pub struct FreeSpace {
     pub path: PathBuf,
     pub bytes: f64,

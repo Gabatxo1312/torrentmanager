@@ -4,9 +4,9 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 
 use crate::config::DirConfig;
+use crate::state::AppState;
 use crate::utils::read_dir::ReadDirError;
 use crate::utils::writable_dir::{ensure_writable_dir, WritableDirError};
-use crate::AppState;
 
 mod save_paths;
 pub use save_paths::SavePathDB;
@@ -18,26 +18,16 @@ pub use collections::{Collection, CollectionDB};
 #[derive(Debug, Snafu)]
 pub enum DatabaseError {
     #[snafu(display("Collections dir is not writable:\n{}", source))]
-    Collections {
-        source: WritableDirError,
-    },
+    Collections { source: WritableDirError },
     #[snafu(display("Uploads dir is not writable:\n{}", source))]
-    Uploads {
-        source: WritableDirError,
-    },
+    Uploads { source: WritableDirError },
     #[snafu(display("Downloads dir is not writable:\n{}", source))]
-    Downloads {
-        source: WritableDirError,
-    },
+    Downloads { source: WritableDirError },
 
     #[snafu(display("{source}"))]
-    ReadDir {
-        source: ReadDirError,
-    },
+    ReadDir { source: ReadDirError },
     #[snafu(display("Failed to persist upload: {source}"))]
-    PersistUpload {
-        source: WritableDirError,
-    },
+    PersistUpload { source: WritableDirError },
 
     // #[snafu(display("Failed to list directory entries in `{}`:\n{}", path.display(), source))]
     // ReadDir { path: PathBuf, source: std::io::Error },
@@ -85,13 +75,11 @@ pub enum DatabaseError {
     //     source: std::io::Error,
     // },
     #[snafu(display("Invalid content id {id}"))]
-    InvalidContentID {
-        id: String,
-    },
+    InvalidContentID { id: String },
     #[snafu(display("An unknown error occurred accessing {}: {}", path.display(), source))]
     Unknown {
         path: std::path::PathBuf,
-        source: std::io::Error,
+        source: Arc<std::io::Error>,
     },
 }
 
@@ -104,9 +92,9 @@ pub enum DatabaseError {
 /// The `Database` is the storage for the entire application. It is in charge of managing:
 ///   - submitted torrents/magnets using [`UploadDB`] (see [`Database::uploads`])
 ///   - content collections managed by the mediatek using [`CollectionsDB`] (see
-///   [`Database::colections`])
+///     [`Database::colections`])
 ///   - torrent save paths as consumed by the torrent clients using [`SavePathDB`] (see
-///   [`Database::save_paths`]
+///     [`Database::save_paths`]
 pub struct Database {
     dirs: DirConfig,
     /// The number of seconds to wait before refreshing the database entries
@@ -173,8 +161,10 @@ impl UnicodePath {
     pub fn to_path_buf(&self) -> PathBuf {
         self.path.to_path_buf()
     }
+}
 
-    pub fn to_string(&self) -> String {
-        self.string.to_string()
+impl std::fmt::Display for UnicodePath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &self.string)
     }
 }

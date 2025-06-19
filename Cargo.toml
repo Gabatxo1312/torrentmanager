@@ -13,14 +13,12 @@ rocket_dyn_templates = { version = "0.2", features = [ "tera" ] }
 toml = "0.8"
 serde = { version = "1", features = [ "derive" ] }
 snafu = "0.8"
-hightorrent = { path = "../hightorrent" }
-hightorrent_api = { path = "../hightorrent_api" }
-hightorrent_api_qbittorrent = { path = "../hightorrent_api_qbittorrent" }
+hightorrent_api = { git = "https://github.com/angrynode/hightorrent_api" }
 
 # To save uploaded magnet/torrent to temporary file
 temp-file = "0.1"
 # To base64url encode tags
-base64-url = "2"
+base64-url = "3"
 
 # Logging
 log = "0.4"

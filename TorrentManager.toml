@@ -1,6 +1,7 @@
-collections_dir = "/tmp/tags"
-uploads_dir = "/tmp/uploads"
-torrents_dir = "/tmp/torrents"
+[dirs]
+collections = "/tmp/tags"
+uploads = "/tmp/uploads"
+downloads = "/tmp/torrents"
 
 [qbittorrent]
 host = "localhost"

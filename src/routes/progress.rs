@@ -1,15 +1,12 @@
 use chrono::{Duration, TimeZone, Utc};
-use rocket::State;
 use rocket_dyn_templates::Template;
-//use qbt::torrent::{Torrent, TorrentList};
-use hightorrent::{SingleTarget, Torrent, TorrentList};
+use hightorrent_api::hightorrent::{SingleTarget, Torrent, TorrentList};
 use hightorrent_api::Api;
 
 use crate::templating::menu::MenuEntry;
 use crate::{AppState, Context};
 
 fn is_ongoing(t: &Torrent) -> bool {
-    //! is_unmanaged(t) &&
     t.progress < 100
         && !more_than_x_hours(t.date_start, 24)
         && t.state != "pausedUP"
@@ -17,7 +14,6 @@ fn is_ongoing(t: &Torrent) -> bool {
 }
 
 fn is_stuck(t: &Torrent) -> bool {
-    //! is_unmanaged(t) &&
     t.progress < 100
         && more_than_x_hours(t.date_start, 24)
         && &t.state != "pausedUP"
@@ -122,32 +118,32 @@ fn more_than_x_hours(ref_date: i64, hours: u64) -> bool {
 }
 
 #[get("/")]
-pub async fn index(state: &State<AppState>) -> Template {
+pub async fn index(state: AppState) -> Template {
     debug!("Displaying progress");
     let context = progress_context(&state, |_t| true).await;
     Template::render("progress", &context)
 }
 
 #[get("/ongoing")]
-pub async fn ongoing(state: &State<AppState>) -> Template {
-    let context = progress_context(&state, |t| is_ongoing(t)).await;
+pub async fn ongoing(state: AppState) -> Template {
+    let context = progress_context(&state, is_ongoing).await;
     Template::render("progress", &context)
 }
 
 #[get("/stuck")]
-pub async fn stuck(state: &State<AppState>) -> Template {
-    let context = progress_context(&state, |t| is_stuck(t)).await;
+pub async fn stuck(state: AppState) -> Template {
+    let context = progress_context(&state, is_stuck).await;
     Template::render("progress", &context)
 }
 
 #[get("/unmanaged")]
-pub async fn unmanaged(state: &State<AppState>) -> Template {
-    let context = progress_context(&state, |t| is_unmanaged(t)).await;
+pub async fn unmanaged(state: AppState) -> Template {
+    let context = progress_context(&state, is_unmanaged).await;
     Template::render("progress", &context)
 }
 
 #[get("/hash/<hash>")]
-pub async fn hash(hash: String, state: &State<AppState>) -> Template {
+pub async fn hash(hash: String, state: AppState) -> Template {
     let mut context = state.context();
 
     match state.api.list().await {
@@ -157,7 +153,16 @@ pub async fn hash(hash: String, state: &State<AppState>) -> Template {
                 context.insert_vec("progress_menu", progress_menu(counter));
 
                 if let Some(found_torrent) = list.get(&target) {
-                    context.insert_vec("torrents", vec![found_torrent]);
+                    match state.api.get_files(&target).await {
+                        Ok(files) => {
+                            context.insert_vec("torrents", vec![found_torrent]);
+                            context.insert_vec("files", files);
+                        }
+                        Err(e) => {
+                            context.insert_vec("torrents", Vec::<String>::new());
+                            context.error(e);
+                        }
+                    }
                 } else {
                     context.insert_vec("torrents", Vec::<String>::new());
                     context.error_owned(format!("No such torrent: {}", hash));

@@ -89,7 +89,7 @@ impl TeraFunction for MenuFn {
             "`` requires an `entries` argument with a list of string values"
         )
         .iter()
-        .map(|x| MenuEntry::from_str(x).expect(&format!("Invalid menu entry {}", x)))
+        .map(|x| MenuEntry::from_str(x).unwrap_or_else(|_| panic!("Invalid menu entry {}", x)))
         .collect();
 
         Ok(to_value(&entries).unwrap())
