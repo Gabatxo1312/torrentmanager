@@ -1,7 +1,7 @@
 use chrono::{Duration, TimeZone, Utc};
-use rocket_dyn_templates::Template;
 use hightorrent_api::hightorrent::{SingleTarget, Torrent, TorrentList};
 use hightorrent_api::Api;
+use rocket_dyn_templates::Template;
 
 use crate::templating::menu::MenuEntry;
 use crate::{AppState, Context};

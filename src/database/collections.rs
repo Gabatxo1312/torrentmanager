@@ -12,22 +12,24 @@ pub struct CollectionDB {
 }
 
 impl CollectionDB {
-    pub fn list(&self) -> &[Collection] {
-        &self.collections
-    }
-
-    pub fn has(&self, name: &str) -> bool {
-        self.list().iter().any(|x| x.name == name)
-    }
-
-    pub fn get(&self, name: &str) -> Option<&Collection> {
-        self.list().iter().find(|x| x.name == name)
-    }
-
+    /// Load collections from a directory, following symlinks recursively.
     pub fn load(collections_dir: &Path) -> Result<Self, DatabaseError> {
         let collections = read_dir_into(collections_dir).context(ReadDirSnafu)?;
 
         Ok(Self { collections })
+    }
+
+    /// Get a collection by name.
+    pub fn get(&self, name: &str) -> Option<&Collection> {
+        self.collections.iter().find(|x| x.name == name)
+    }
+}
+
+impl std::ops::Deref for CollectionDB {
+    type Target = Vec<Collection>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.collections
     }
 }
 

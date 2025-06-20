@@ -179,7 +179,6 @@ impl AppState {
             "collections",
             self.database
                 .collections()
-                .list()
                 .iter()
                 .map(|x| &x.name)
                 .collect(),
