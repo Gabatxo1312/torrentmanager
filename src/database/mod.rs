@@ -2,6 +2,7 @@ use snafu::prelude::*;
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
+use std::time::Instant;
 
 use crate::config::DirConfig;
 use crate::state::AppState;
@@ -110,10 +111,21 @@ impl Database {
         ensure_writable_dir(&dirs.uploads).context(UploadsSnafu)?;
         ensure_writable_dir(&dirs.downloads).context(DownloadsSnafu)?;
 
+        let now = Instant::now();
+        let collections = CollectionDB::load(&dirs.collections)?;
+        info!(
+            "Loaded {} collections in {}ms:",
+            collections.len(),
+            now.elapsed().as_millis()
+        );
+        for collection in collections.iter() {
+            info!("  - {}: {}", collection.name, collection.path.display());
+        }
+
         Ok(Database {
             dirs: dirs.clone(),
             ttl: 60,
-            collections: CollectionDB::load(&dirs.collections)?,
+            collections,
         })
     }
 
