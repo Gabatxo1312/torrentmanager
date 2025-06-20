@@ -88,18 +88,30 @@ impl InnerFallibleState {
     }
 
     pub fn failed_qbt(e: ApiError) -> Self {
+        error!("Qbittorrent client failed to load!");
+        error!("{}", e);
+
         Self::Err(AppSetupState {
             inner: Arc::new(RwLock::new(InnerAppSetupState::FailedQbt(e))),
         })
     }
 
     pub fn failed_database(e: crate::database::DatabaseError) -> Self {
+        error!("Database failed to load!");
+        error!("{}", e);
+
         Self::Err(AppSetupState {
             inner: Arc::new(RwLock::new(InnerAppSetupState::FailedDatabase(e))),
         })
     }
 
     pub fn failed_config(e: Vec<AppError>) -> Self {
+        error!("Config failed to load!");
+
+        for error in &e {
+            error!("- {}", error);
+        }
+
         Self::Err(AppSetupState {
             inner: Arc::new(RwLock::new(InnerAppSetupState::FailedConfig(e))),
         })
