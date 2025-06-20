@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 pub enum WritableDirError {
     #[snafu(display("Directory {} does not exist", path.display()))]
     Missing { path: PathBuf },
-    #[snafu(display("Symlink {} to a directory that does not exist, ir not a directory, or is not writable: {}", path.display(), source))]
+    #[snafu(display("Symlink {} to a directory that does not exist, is not a directory, or is not writable: {}", path.display(), source))]
     Symlink {
         path: PathBuf,
         source: Box<dyn snafu::Error + Send + Sync + 'static>,

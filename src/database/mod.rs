@@ -9,10 +9,13 @@ use crate::state::AppState;
 use crate::utils::read_dir::ReadDirError;
 use crate::utils::writable_dir::{ensure_writable_dir, WritableDirError};
 
+/// Download paths for the torrent client.
 mod save_paths;
 pub use save_paths::SavePathDB;
+/// Upload paths for submitted magnets/torrents.
 mod uploads;
 pub use uploads::{UploadDB, UploadID, UploadPath};
+/// Collections paths for categorization of content.
 mod collections;
 pub use collections::{Collection, CollectionDB};
 
@@ -25,8 +28,8 @@ pub enum DatabaseError {
     #[snafu(display("Downloads dir is not writable:\n{}", source))]
     Downloads { source: WritableDirError },
 
-    #[snafu(display("{source}"))]
-    ReadDir { source: ReadDirError },
+    #[snafu(display("Failed to read directory {}:\n{source}", path.display()))]
+    ReadDir { path: PathBuf, source: ReadDirError },
     #[snafu(display("Failed to persist upload: {source}"))]
     PersistUpload { source: WritableDirError },
 
@@ -112,6 +115,7 @@ impl Database {
         ensure_writable_dir(&dirs.downloads).context(DownloadsSnafu)?;
 
         let now = Instant::now();
+        info!("Loading collections...");
         let collections = CollectionDB::load(&dirs.collections)?;
         info!(
             "Loaded {} collections in {}ms:",
@@ -119,7 +123,12 @@ impl Database {
             now.elapsed().as_millis()
         );
         for collection in collections.iter() {
-            info!("  - {}: {}", collection.name, collection.path.display());
+            info!(
+                "  - {} ({} entries): {}",
+                collection.name,
+                collections.entries.get(collection).unwrap().len(),
+                collection.path.display()
+            );
         }
 
         Ok(Database {

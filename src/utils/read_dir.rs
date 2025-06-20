@@ -20,6 +20,11 @@ pub enum ReadDirError {
     Transform {
         source: Box<dyn snafu::Error + Send + Sync + 'static>,
     },
+    #[snafu(display("Unknown error at path {}: {}", path.display(), source))]
+    Other {
+        path: PathBuf,
+        source: Box<dyn snafu::Error + Send + Sync + 'static>,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -56,6 +61,25 @@ where
     let mut entries: Vec<T> = Vec::new();
 
     for entry in read_dir(dir)? {
+        let typed_entry = T::try_from(entry)?;
+        entries.push(typed_entry);
+    }
+
+    Ok(entries)
+}
+
+/// Symlinks are not followed. Only directories are recursed into.
+pub fn read_dir_recursive_into<T: TryFrom<ReadDirEntry>>(dir: &Path) -> Result<Vec<T>, ReadDirError>
+where
+    ReadDirError: From<<T as TryFrom<ReadDirEntry>>::Error>,
+{
+    let mut entries: Vec<T> = Vec::new();
+
+    for entry in read_dir(dir)? {
+        if entry.path.is_dir() {
+            entries.extend(read_dir_recursive_into(&entry.path)?);
+        }
+
         let typed_entry = T::try_from(entry)?;
         entries.push(typed_entry);
     }
