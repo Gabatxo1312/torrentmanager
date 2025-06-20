@@ -118,7 +118,9 @@ impl TryFrom<ReadDirEntry> for CollectionEntry {
         } else if value.path.is_symlink() {
             Ok(CollectionEntry::Symlink {
                 source: value.path.to_path_buf(),
-                dest: value.path.canonicalize().boxed().context(OtherSnafu {
+                // TODO: support reading links recursively?
+                // canonicalize errors when the final dest does not exist so we don't want that
+                dest: value.path.read_link().boxed().context(OtherSnafu {
                     path: value.path.to_path_buf(),
                 })?,
             })
