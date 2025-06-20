@@ -31,7 +31,7 @@ impl Context {
     }
 
     pub fn error_owned(&mut self, value: String) {
-        self.errors.push(value);
+        self.errors.push(value.replace('\n', "<br>"));
     }
 
     pub fn has_errors(&self) -> bool {
