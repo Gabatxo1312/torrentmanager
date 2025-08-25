@@ -1,0 +1,36 @@
+[package]
+name = "torrentmanager-axum"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "torrentmanager"
+path = "src/lib.rs"
+
+[[bin]]
+name = "torrentmanager"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.8.4"
+# CLI parsing:
+#   derive: Parser derive macro
+# Consider adding extra deps:
+#   shadow-rs: build information in CLI
+#   clap_mangen: generate manpage at build time
+#   clap_complete: generate shell autocompletions
+clap = { version = "4.5.45", features = ["derive"] }
+clap-verbosity-flag = "3.0.4"
+env_logger = "0.11.8"
+log = "0.4.27"
+# Extra tokio features:
+#   fs: Filesystem IO integration
+#   rt: Single-threaded runtime
+#   sync: Mutex/RwLock support
+#   time: Sleep/Timeout support
+tokio = { version = "1.47.1", features = ["fs", "rt", "sync", "time"] }
+# Multiple listener integration:
+#   axum08: axum Listener trait integration
+#   clap: CLI parsing
+#   boxed_variant/mpsc_listener: IO mocking in tests
+tokio-listener = { version = "0.5.1", features = ["axum08", "clap", "boxed_variant", "mpsc_listener"] }
