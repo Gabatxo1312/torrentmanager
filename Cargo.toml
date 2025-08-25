@@ -12,6 +12,9 @@ name = "torrentmanager"
 path = "src/main.rs"
 
 [dependencies]
+askama = "0.14.0"
+# askama_web::WebTemplate implements axum::IntoResponse
+askama_web = { version = "0.14.6", features = ["axum-0.8"] }
 axum = "0.8.4"
 # CLI parsing:
 #   derive: Parser derive macro
