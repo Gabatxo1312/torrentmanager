@@ -10,7 +10,7 @@ async fn main() {
     // Defaults to errors only (-q to suppress).
     // -v for warning, -vv for info, -vvv for debug, -vvvv for trace
     let cli_args = cli::Args::parse();
-        env_logger::Builder::new()
+    env_logger::Builder::new()
         .filter_level(cli_args.verbosity.log_level_filter())
         .init();
 
