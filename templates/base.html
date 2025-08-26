@@ -30,7 +30,14 @@
         </section>
         <footer>
             {% include "menus/footer.html" %}
-				<h3 style="margin: auto; font-weight: bolder;">Free space: {{ free_space }}</h3>
+					<div class="container is-centered has-text-centered">
+						{% if let Some(user) = user %}
+						<h3 style="font-weight: bolder;">Logged in as {{ user|safe }}</h3>
+						{% else %}
+						<h3 style="font-weight: bolder;">Not logged in.</h3>
+						{% endif %}
+						<h3 style="font-weight: bolder;">Free space: {{ free_space }}</h3>
+					</div>
         </footer>
 	</body>
 </html>

@@ -3,6 +3,7 @@ use axum::routing::get;
 use axum::serve::Listener;
 use static_serve::embed_assets;
 
+pub mod extractors;
 pub mod routes;
 pub mod state;
 

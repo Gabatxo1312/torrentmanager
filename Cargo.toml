@@ -23,7 +23,10 @@ axum = "0.8.4"
 #   clap_mangen: generate manpage at build time
 #   clap_complete: generate shell autocompletions
 clap = { version = "4.5.45", features = ["derive"] }
+# Automatic -q/-v/-vv/-vvv/-vvvv for verbosity
 clap-verbosity-flag = "3.0.4"
+# Reduce boilerplate for newtype pattern
+derive_more = { version = "2.0.1", features = ["display"] }
 env_logger = "0.11.8"
 log = "0.4.27"
 # Serve static assets directly from the binary
@@ -39,4 +42,5 @@ tokio = { version = "1.47.1", features = ["fs", "rt", "sync", "time"] }
 #   clap: CLI parsing
 #   boxed_variant/mpsc_listener: IO mocking in tests
 tokio-listener = { version = "0.5.1", features = ["axum08", "clap", "boxed_variant", "mpsc_listener"] }
+# Dependency for free-space calculation
 uucore = { version = "0.1.0", features = ["fsext"] }
