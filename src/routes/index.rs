@@ -1,6 +1,9 @@
 use askama::Template;
 use askama_web::WebTemplate;
+use axum::extract::State;
 use axum::response::IntoResponse;
+
+use crate::state::AppState;
 
 use std::collections::HashMap;
 
@@ -14,10 +17,10 @@ pub struct IndexTemplate {
     pub warnings: Vec<String>,
 }
 
-pub async fn index() -> impl IntoResponse {
+pub async fn index(State(app_state): State<AppState>) -> impl IntoResponse {
     IndexTemplate {
         collections: Vec::new(),
-        free_space: String::from("lol"),
+        free_space: app_state.free_space().to_string(),
         errors: Vec::new(),
         post: HashMap::new(),
         warnings: Vec::new(),

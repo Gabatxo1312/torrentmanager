@@ -4,6 +4,7 @@ use axum::serve::Listener;
 use static_serve::embed_assets;
 
 pub mod routes;
+pub mod state;
 
 pub fn router() -> Router {
     // Embed the assets in the binary, generating the static_router function
@@ -14,6 +15,8 @@ pub fn router() -> Router {
         .route("/", get(routes::index::index))
         // Register static assets routes
         .nest("/assets", static_router())
+        // Allow to access global AppState from routes
+        .with_state(state::AppState)
 }
 
 pub async fn serve<L>(listener: L)
