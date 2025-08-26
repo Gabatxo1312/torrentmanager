@@ -71,7 +71,7 @@ impl FreeSpace {
         Self {
             free_space_gib: gib_free as u64,
             total_space_gib: gib_total as u64,
-            free_space_percent: percent_used as u64,
+            free_space_percent: 100 - percent_used as u64,
         }
     }
 }
