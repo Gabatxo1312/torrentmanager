@@ -26,6 +26,6 @@ pub async fn index(State(app_state): State<AppState>, user: Option<User>) -> imp
         errors: Vec::new(),
         post: HashMap::new(),
         warnings: Vec::new(),
-        user: user,
+        user,
     }
 }

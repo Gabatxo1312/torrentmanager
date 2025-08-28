@@ -44,7 +44,7 @@ impl FreeSpace {
             })
             .unwrap();
         let stat_path = if mount_info.mount_dir.is_empty() {
-            mount_info.dev_name.clone().into()
+            mount_info.dev_name.clone()
         } else {
             mount_info.mount_dir.clone()
         };

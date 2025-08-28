@@ -31,7 +31,7 @@ pub async fn progress(
 
     // If only one torrent is inspected, display the content files
     let files = if filtered_list.len() == 1 {
-        let torrent_id = &filtered_list.get(0).unwrap().id;
+        let torrent_id = &filtered_list.first().unwrap().id;
         Some(
             app_state
                 .torrent_get_files(&SingleTarget::from(torrent_id))
@@ -42,9 +42,9 @@ pub async fn progress(
     };
 
     TorrentListTemplate {
-        counter: counter,
+        counter,
         errors: vec![],
-        files: files,
+        files,
         free_space: app_state.free_space().to_string(),
         torrents: filtered_list,
         user: None,

@@ -97,17 +97,17 @@ impl TorrentListCounter {
         for torrent in list {
             counter.everything += 1;
 
-            if is_torrent_unmanaged(&torrent) {
+            if is_torrent_unmanaged(torrent) {
                 counter.unmanaged += 1;
                 continue;
             }
 
-            if is_torrent_ongoing(&torrent) {
+            if is_torrent_ongoing(torrent) {
                 counter.ongoing += 1;
                 continue;
             }
 
-            if is_torrent_stuck(&torrent) {
+            if is_torrent_stuck(torrent) {
                 counter.stuck += 1;
                 continue;
             }
