@@ -1,4 +1,4 @@
-use hightorrent_api::hightorrent::TorrentList;
+use hightorrent_api::hightorrent::{SingleTarget, TorrentContent, TorrentList};
 use hightorrent_api::{Api, QBittorrentClient};
 
 use std::path::PathBuf;
@@ -38,5 +38,10 @@ impl AppState {
     pub async fn torrent_list(&self) -> TorrentList {
         // TODO: errors
         self.torrent_client.list().await.unwrap()
+    }
+
+    pub async fn torrent_get_files(&self, target: &SingleTarget) -> Vec<TorrentContent> {
+        // TODO: errors
+        self.torrent_client.get_files(target).await.unwrap()
     }
 }
