@@ -1,0 +1,35 @@
+<table class="table">
+    <thead>
+        <tr>
+            <th>Progress</th>
+            <th>Size</th>
+            <th>Name</th>
+        </tr>
+    </thead>
+    {% for entry in torrents %}
+    <tr>
+        <td>{% if entry.progress == 100 %}<i class="fa fa-angellist"></i>{% else %}{{ entry.progress }}%{% endif %}</td>
+        <td class="is-right" align="right">{% if entry.size < 0 %}?{% else %}{{ entry.size | filesizeformat }}{% endif %}</td>
+        <td class="is-left" align="left"><a href="/progress/{{ entry.id }}">{{ entry.name }}</a></td>
+    </tr>
+    {% endfor %}
+</table>
+
+{# TODO: files inside the torrent
+{% if files %}
+<table class="table">
+    <thead>
+        <tr>
+            <td align="left">Torrent file</td>
+            <td align="left">Content symlink</td>
+        </tr>
+    </thead>
+    {% for entry in files %}
+    <tr>
+        <td align="left">{{ entry.path }}</td>
+        <td></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+#}

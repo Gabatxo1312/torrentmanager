@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+{# If there's only one torrent, and its status is not finished, reload regularly #}
+{% if torrents.len() == 1 %}
+{% set torrent = torrents.get(0).unwrap() %}
+{% if torrent.progress < 100 %}<meta http-equiv="refresh" content="5;">{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block main %}
+<div style="text-align: center; margin: auto;">
+    <h1 class="title">Progress</h1>
+    {% include "menus/progress.html" %}
+
+    {% if errors.len() != 0 %}
+        <h2>Could not reach Bittorrent client (see errors above)</h2>
+    {% else if torrents.len() == 0 %}
+        <h2>No content yet!</h2>
+    {% else %}
+        {% include "progress_table.html" %}
+    {% endif %}
+</div>
+{% endblock %}
