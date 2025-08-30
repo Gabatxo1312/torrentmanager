@@ -4,6 +4,7 @@ use axum::serve::Listener;
 use static_serve::embed_assets;
 
 pub mod extractors;
+pub mod middleware;
 pub mod routes;
 pub mod state;
 
@@ -17,6 +18,8 @@ pub fn router(state: state::AppState) -> Router {
         .route("/progress/{view_request}", get(routes::progress::progress))
         // Register static assets routes
         .nest("/assets", static_router())
+        // Insert request timing
+        .layer(axum::middleware::from_fn(middleware::timing::add_timing))
         // Allow to access global AppState from routes
         .with_state(state)
 }
