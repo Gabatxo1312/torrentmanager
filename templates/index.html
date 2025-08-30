@@ -4,7 +4,7 @@
                 <h1 class="title" style="text-align: center;">TorrentManager</h1>
                 <form method="POST" action="/upload" enctype="multipart/form-data" accept-charset="utf-8">
 					<div class="box is-flex is-justify-content-center is-align-items-center" style="margin: 1rem auto; text-align: center; max-width: 512px; gap: 20px; border: solid 1px black;">
-                        <h2>Collection:</h2>
+                        <h2>Category:</h2>
 						<div class="select is-centered">
 						    <select name="collection">{#{% set post_tag = post.tag %} TODO #}
                                 <option disabled {#{% if post_tag is not defined %}selected{% endif %}#}>Genre</option>
