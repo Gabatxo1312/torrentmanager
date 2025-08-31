@@ -22,7 +22,8 @@ pub struct IndexTemplate {
 pub async fn index(State(app_state): State<AppState>, user: Option<User>) -> impl IntoResponse {
     IndexTemplate {
         collections: Vec::new(),
-        free_space: app_state.free_space().to_string(),
+        // TODO: errors (move into AppState::context)
+        free_space: app_state.free_space().unwrap().to_string(),
         errors: Vec::new(),
         post: HashMap::new(),
         warnings: Vec::new(),

@@ -5,8 +5,23 @@
 // file that was distributed there:
 // https://github.com/uutils/coreutils/blob/main/LICENSE
 
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
+use snafu::prelude::*;
 use uucore::fsext::{FsUsage, read_fs_list, statfs};
+
+#[derive(Debug, Snafu)]
+#[snafu(visibility(pub))]
+pub enum FreeSpaceError {
+    #[snafu(display("Failed to resolve provided path {path}"))]
+    ResolvePath {
+        path: Utf8PathBuf,
+        source: std::io::Error,
+    },
+    #[snafu(display("Failed to read partitions from system"))]
+    Partitions { reason: String },
+    #[snafu(display("Failed to read info about specific partition"))]
+    Partition { reason: String },
+}
 
 /// Remaining space on a partition.
 ///
@@ -21,12 +36,15 @@ pub struct FreeSpace {
 }
 
 impl FreeSpace {
-    // TODO: errors
-    pub fn from_path(path: &Utf8Path) -> FreeSpace {
-        let path = path.canonicalize().unwrap();
+    pub fn from_path(path: &Utf8Path) -> Result<Self, FreeSpaceError> {
+        let path = path.canonicalize().context(ResolvePathSnafu {
+            path: path.to_path_buf(),
+        })?;
 
         // Copied from uutils df package (MIT license)
-        let mounts: Vec<_> = read_fs_list().unwrap();
+        let mounts: Vec<_> = read_fs_list().map_err(|e| FreeSpaceError::Partitions {
+            reason: e.to_string(),
+        })?;
         let maybe_mount_point = mounts
             .iter()
             .map(|m| (m, std::fs::canonicalize(&m.dev_name)))
@@ -47,7 +65,9 @@ impl FreeSpace {
         } else {
             mount_info.mount_dir.clone()
         };
-        let usage = FsUsage::new(statfs(stat_path).unwrap());
+        let usage = FsUsage::new(statfs(stat_path).map_err(|e| FreeSpaceError::Partition {
+            reason: e.to_string(),
+        })?);
 
         // Calculate used/free space on partition
         let blocks_used = usage.blocks.saturating_sub(usage.bfree);
@@ -67,11 +87,11 @@ impl FreeSpace {
 
         let gib_total = (usage.blocks * usage.blocksize) as f64 / 1024.0 / 1024.0 / 1024.0;
 
-        Self {
+        Ok(Self {
             free_space_gib: gib_free as u64,
             total_space_gib: gib_total as u64,
             free_space_percent: 100 - percent_used as u64,
-        }
+        })
     }
 }
 

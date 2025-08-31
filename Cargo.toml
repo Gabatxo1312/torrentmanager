@@ -35,8 +35,8 @@ env_logger = "0.11.8"
 # Interactions with the torrent client
 # Comment/uncomment below for development version
 # hightorrent_api = { path = "../hightorrent_api" }
-# hightorrent_api = { git = "https://github.com/angrynode/hightorrent_api" }
-hightorrent_api = "0.2"
+hightorrent_api = { git = "https://github.com/angrynode/hightorrent_api" }
+# hightorrent_api = "0.2"
 log = "0.4.27"
 # Serialization/deserialization, for example in path extractors
 serde = { version = "1.0.219", features = ["derive", "rc"] }

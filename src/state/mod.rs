@@ -1,9 +1,13 @@
 use hightorrent_api::hightorrent::{SingleTarget, TorrentContent, TorrentList};
 use hightorrent_api::{Api, QBittorrentClient};
+use snafu::prelude::*;
 
 use crate::config::AppConfig;
 
+pub mod error;
 pub mod free_space;
+
+use error::*;
 
 /// Global application state.
 ///
@@ -19,23 +23,21 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub async fn new(config: AppConfig) -> Self {
+    pub async fn new(config: AppConfig) -> Result<Self, AppStateError> {
         // TODO: config for torrent backend
-        Self {
+
+        let torrent_client =
+            QBittorrentClient::new_not_logged_in("http://localhost:8080", "admin", "adminadmin")
+                .context(InitAPISnafu)?;
+
+        Ok(Self {
             config,
-            torrent_client: QBittorrentClient::login(
-                "http://localhost:8080",
-                "admin",
-                "adminadmin",
-            )
-            .await
-            .unwrap(),
-        }
+            torrent_client,
+        })
     }
 
-    pub fn free_space(&self) -> free_space::FreeSpace {
-        // TODO: errors
-        free_space::FreeSpace::from_path(&self.config.media_dir)
+    pub fn free_space(&self) -> Result<free_space::FreeSpace, AppStateError> {
+        free_space::FreeSpace::from_path(&self.config.media_dir).context(FreeSpaceSnafu)
     }
 
     pub async fn torrent_list(&self) -> TorrentList {

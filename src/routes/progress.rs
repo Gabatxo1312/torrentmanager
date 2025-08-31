@@ -45,7 +45,8 @@ pub async fn progress(
         counter,
         errors: vec![],
         files,
-        free_space: app_state.free_space().to_string(),
+        // TODO: errors (move into AppState::context)
+        free_space: app_state.free_space().unwrap().to_string(),
         torrents: filtered_list,
         user: None,
         warnings: vec![],

@@ -1,13 +1,23 @@
 use clap::Parser;
 use snafu::ErrorCompat;
+use snafu::prelude::*;
 use tokio_listener::{Listener, SystemOptions, UserOptions};
 
 use torrentmanager::config::{AppConfig, ConfigError};
 use torrentmanager::serve;
+use torrentmanager::state::error::AppStateError;
 
 mod cli;
 
-async fn main_inner() -> Result<(), ConfigError> {
+#[derive(Debug, Snafu)]
+pub enum AppError {
+    #[snafu(display("Failed to initialize TorrentManager config"))]
+    Config { source: ConfigError },
+    #[snafu(display("Failed to initialize AppState"))]
+    State { source: AppStateError },
+}
+
+async fn main_inner() -> Result<(), AppError> {
     // Initialize logging with selected log-level
     // Defaults to errors only (-q to suppress).
     // -v for warning, -vv for info, -vvv for debug, -vvvv for trace
@@ -18,10 +28,10 @@ async fn main_inner() -> Result<(), ConfigError> {
 
     let config = if let Some(config_path) = &cli_args.config {
         // Config file supplied from CLI
-        AppConfig::load(config_path).await?
+        AppConfig::load(config_path).await.context(ConfigSnafu)?
     } else {
         // Default config
-        AppConfig::load_from_xdg().await?
+        AppConfig::load_from_xdg().await.context(ConfigSnafu)?
     };
 
     // CLI listen option has precedence over config file
@@ -38,7 +48,7 @@ async fn main_inner() -> Result<(), ConfigError> {
         .await
         .unwrap();
 
-    serve(listener, config).await;
+    serve(listener, config).await.context(StateSnafu)?;
 
     Ok(())
 }

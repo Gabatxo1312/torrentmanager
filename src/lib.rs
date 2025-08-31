@@ -9,6 +9,8 @@ pub mod middleware;
 pub mod routes;
 pub mod state;
 
+use state::error::AppStateError;
+
 pub fn router(state: state::AppState) -> Router {
     // Embed the assets in the binary, generating the static_router function
     embed_assets!("assets");
@@ -25,15 +27,17 @@ pub fn router(state: state::AppState) -> Router {
         .with_state(state)
 }
 
-pub async fn serve<L>(listener: L, config: config::AppConfig)
+pub async fn serve<L>(listener: L, config: config::AppConfig) -> Result<(), AppStateError>
 where
     L: Listener,
     L::Addr: std::fmt::Debug,
 {
-    let state = state::AppState::new(config).await;
+    let state = state::AppState::new(config).await?;
     let app = router(state);
 
     axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
+
+    Ok(())
 }
