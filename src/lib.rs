@@ -3,6 +3,7 @@ use axum::routing::get;
 use axum::serve::Listener;
 use static_serve::embed_assets;
 
+pub mod config;
 pub mod extractors;
 pub mod middleware;
 pub mod routes;
@@ -24,12 +25,12 @@ pub fn router(state: state::AppState) -> Router {
         .with_state(state)
 }
 
-pub async fn serve<L>(listener: L)
+pub async fn serve<L>(listener: L, config: config::AppConfig)
 where
     L: Listener,
     L::Addr: std::fmt::Debug,
 {
-    let state = state::AppState::new().await;
+    let state = state::AppState::new(config).await;
     let app = router(state);
 
     axum::serve(listener, app.into_make_service())

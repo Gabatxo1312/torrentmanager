@@ -5,9 +5,8 @@
 // file that was distributed there:
 // https://github.com/uutils/coreutils/blob/main/LICENSE
 
+use camino::Utf8Path;
 use uucore::fsext::{FsUsage, read_fs_list, statfs};
-
-use std::path::Path;
 
 /// Remaining space on a partition.
 ///
@@ -23,7 +22,7 @@ pub struct FreeSpace {
 
 impl FreeSpace {
     // TODO: errors
-    pub fn from_path(path: &Path) -> FreeSpace {
+    pub fn from_path(path: &Utf8Path) -> FreeSpace {
         let path = path.canonicalize().unwrap();
 
         // Copied from uutils df package (MIT license)

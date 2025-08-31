@@ -1,7 +1,7 @@
 use hightorrent_api::hightorrent::{SingleTarget, TorrentContent, TorrentList};
 use hightorrent_api::{Api, QBittorrentClient};
 
-use std::path::PathBuf;
+use crate::config::AppConfig;
 
 pub mod free_space;
 
@@ -11,14 +11,18 @@ pub mod free_space;
 /// database. Can be safely cloned between threads (inner mutability).
 #[derive(Clone, Debug)]
 pub struct AppState {
+    // Global configuration for TorrentManager
+    pub config: AppConfig,
+
     // TODO: multiple torrent backends
     pub torrent_client: QBittorrentClient,
 }
 
 impl AppState {
-    pub async fn new() -> Self {
+    pub async fn new(config: AppConfig) -> Self {
         // TODO: config for torrent backend
         Self {
+            config,
             torrent_client: QBittorrentClient::login(
                 "http://localhost:8080",
                 "admin",
@@ -30,9 +34,8 @@ impl AppState {
     }
 
     pub fn free_space(&self) -> free_space::FreeSpace {
-        // TODO: configurable paths
         // TODO: errors
-        free_space::FreeSpace::from_path(&PathBuf::from("/home"))
+        free_space::FreeSpace::from_path(&self.config.media_dir)
     }
 
     pub async fn torrent_list(&self) -> TorrentList {

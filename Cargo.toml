@@ -16,6 +16,8 @@ askama = "0.14.0"
 # askama_web::WebTemplate implements axum::IntoResponse
 askama_web = { version = "0.14.6", features = ["axum-0.8"] }
 axum = { version = "0.8.4", features = ["macros"] }
+# UTF-8 paths for easier String/PathBuf interop
+camino = { version = "1.1.12", features = ["serde1"] }
 # Date/time management
 chrono = "0.4.41"
 # CLI parsing:
@@ -37,7 +39,9 @@ env_logger = "0.11.8"
 hightorrent_api = "0.2"
 log = "0.4.27"
 # Serialization/deserialization, for example in path extractors
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive", "rc"] }
+# Error declaration/context
+snafu = "0.8.8"
 # Serve static assets directly from the binary
 static-serve = "0.3.0"
 # Extra tokio features:
@@ -51,5 +55,9 @@ tokio = { version = "1.47.1", features = ["fs", "rt", "sync", "time"] }
 #   clap: CLI parsing
 #   boxed_variant/mpsc_listener: IO mocking in tests
 tokio-listener = { version = "0.5.1", features = ["axum08", "clap", "boxed_variant", "mpsc_listener"] }
+# Configuration file parsing
+toml = { version = "0.9.5", features = ["preserve_order"] }
 # Dependency for free-space calculation
 uucore = { version = "0.1.0", features = ["fsext"] }
+# Finding XDG standard directories (such as ~/.config/torrentmanager/config.toml)
+xdg = "3.0.0"
