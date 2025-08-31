@@ -90,6 +90,8 @@ impl AppConfig {
 
         let config_path = config_dir.join("config.toml");
 
+        log::info!("Loading configuration from {config_path}");
+
         if !try_exists(&config_path).await.context(FailedIOSnafu)? {
             return Err(ConfigError::NoXDGConfigFile { path: config_path });
         }
