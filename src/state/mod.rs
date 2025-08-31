@@ -8,6 +8,7 @@ pub mod error;
 pub mod free_space;
 
 use error::*;
+use free_space::FreeSpace;
 
 /// Global application state.
 ///
@@ -22,7 +23,42 @@ pub struct AppState {
     pub torrent_client: QBittorrentClient,
 }
 
+/// Basic templating context used across pages.
+pub struct AppStateContext {
+    // TODO: proper categories
+    pub categories: Vec<String>,
+    pub errors: Vec<String>,
+    // FreeSpace is optional because reading it can fail
+    pub free_space: Option<FreeSpace>,
+    pub warnings: Vec<String>,
+}
+
+impl AppStateContext {
+    fn from_app_state(state: &AppState) -> Self {
+        let mut errors = Vec::new();
+
+        let free_space = match state.free_space() {
+            Ok(free_space) => Some(free_space),
+            Err(e) => {
+                errors.push(e.to_string());
+                None
+            }
+        };
+
+        Self {
+            categories: vec![],
+            errors,
+            free_space,
+            warnings: vec![],
+        }
+    }
+}
+
 impl AppState {
+    pub async fn context(&self) -> AppStateContext {
+        AppStateContext::from_app_state(self)
+    }
+
     pub async fn new(config: AppConfig) -> Result<Self, AppStateError> {
         // TODO: config for torrent backend
 
@@ -36,7 +72,7 @@ impl AppState {
         })
     }
 
-    pub fn free_space(&self) -> Result<free_space::FreeSpace, AppStateError> {
+    pub fn free_space(&self) -> Result<FreeSpace, AppStateError> {
         free_space::FreeSpace::from_path(&self.config.media_dir).context(FreeSpaceSnafu)
     }
 

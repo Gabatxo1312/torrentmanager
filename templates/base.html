@@ -15,12 +15,12 @@
 
         <section class="section" style="padding: 0;">
             <div class="container">
-{% for error in errors %}
+{% for error in state.errors %}
                 <div class="notification is-danger">
                 {#<h2 style="font-weight: bold; text-align: center;">{{ error|replace(from="\n", to="<br>")|safe }}</h2>#}
                 </div>
 {% endfor %}
-{% for warning in warnings %}
+{% for warning in state.warnings %}
 		<div class="notification is-warning">
 		{#<h2 style="font-weight: bold; text-align: center;">{{ warning|replace(from="\n", to="<br>"|safe) }}</h2>#}
 {% endfor %}
@@ -36,7 +36,9 @@
 						{% else %}
 						<h3 style="font-weight: bolder;">Not logged in.</h3>
 						{% endif %}
+						{% if let Some(free_space) = state.free_space %}
 						<h3 style="font-weight: bolder;">Free space: {{ free_space }}</h3>
+						{% endif %}
 						<h3 style="font-weight: bolder;">Page generated in __GENERATION_TIME__</h3>
 					</div>
         </footer>
