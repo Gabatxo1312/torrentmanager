@@ -7,6 +7,5 @@ pub struct Args {
     #[command(flatten)]
     pub verbosity: Verbosity<InfoLevel>,
 
-    #[clap(flatten)]
-    pub listener: tokio_listener::ListenerAddressPositional,
+    pub listen: Option<tokio_listener::ListenerAddress>,
 }

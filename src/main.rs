@@ -1,5 +1,6 @@
 use clap::Parser;
 use snafu::ErrorCompat;
+use tokio_listener::{Listener, SystemOptions, UserOptions};
 
 use torrentmanager::config::{AppConfig, ConfigError};
 use torrentmanager::serve;
@@ -19,11 +20,19 @@ async fn main_inner() -> Result<(), ConfigError> {
     // TODO: load with CLI argument
     let config = AppConfig::load_from_xdg().await?;
 
+    // CLI listen option has precedence over config file
+    let listener = cli_args.listen.as_ref().unwrap_or(&config.listen);
+
+    let sys_opts = SystemOptions::default();
+    let mut usr_opts = UserOptions::default();
     // Always remove previous socket before binding
     // TODO: check file lock to see if socket still in use by other process
-    let mut listener = cli_args.listener;
-    listener.listener_options.unix_listen_unlink = true;
-    let listener = listener.bind().await.unwrap();
+    usr_opts.unix_listen_unlink = true;
+
+    // Binds to the requested listener to start the server
+    let listener = Listener::bind(listener, &sys_opts, &usr_opts)
+        .await
+        .unwrap();
 
     serve(listener, config).await;
 

@@ -54,7 +54,7 @@ tokio = { version = "1.47.1", features = ["fs", "rt", "sync", "time"] }
 #   axum08: axum Listener trait integration
 #   clap: CLI parsing
 #   boxed_variant/mpsc_listener: IO mocking in tests
-tokio-listener = { version = "0.5.1", features = ["axum08", "clap", "boxed_variant", "mpsc_listener"] }
+tokio-listener = { version = "0.5.1", features = ["axum08", "clap", "boxed_variant", "mpsc_listener", "serde"] }
 # Configuration file parsing
 toml = { version = "0.9.5", features = ["preserve_order"] }
 # Dependency for free-space calculation

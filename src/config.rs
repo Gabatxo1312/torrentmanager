@@ -2,6 +2,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Serialize};
 use snafu::prelude::*;
 use tokio::fs::{create_dir_all, read, try_exists, write};
+use tokio_listener::ListenerAddress;
 use xdg::BaseDirectories;
 
 use std::sync::{Arc, RwLock};
@@ -68,11 +69,29 @@ pub struct AppConfig {
     /// Main categories to store content
     // pub media_categories: Arc<RwLock<Vec<CategoryConfig>>>
     pub media_categories: Arc<RwLock<Vec<CategoryConfig>>>,
+
+    /// IP:PORT or Unix socket path to start the server (default: `127.0.0.1:8000`).
+    ///
+    /// Examples:
+    ///
+    /// - `0.0.0.0:8000` to listen on port 8000 on all interfaces, when you have a reverse proxy
+    ///   that's not on the same machine (be careful with the firewall rules)
+    /// - `/run/torrentmanager/server.sock` to listen on a specific socket file; torrentmanager
+    ///   has no permission to create a file in /run, so make sure your systemd service does it
+    ///   for you with the `RuntimeDirectory=torrentmanager` directive
+    ///
+    /// TODO: settings to change permissions on the socket to allow eg. httpd group to read/write
+    #[serde(default = "AppConfig::default_listener_address")]
+    pub listen: ListenerAddress,
 }
 
 impl AppConfig {
     pub fn xdg_base_directories() -> BaseDirectories {
         BaseDirectories::with_prefix("torrentmanager")
+    }
+
+    pub fn default_listener_address() -> ListenerAddress {
+        "127.0.0.1:8000".parse().unwrap()
     }
 
     pub async fn load_from_xdg() -> Result<Self, ConfigError> {
@@ -90,7 +109,7 @@ impl AppConfig {
 
         let config_path = config_dir.join("config.toml");
 
-        log::info!("Loading configuration from {config_path}");
+        log::info!("Looking up default XDG configuration: {config_path}");
 
         if !try_exists(&config_path).await.context(FailedIOSnafu)? {
             return Err(ConfigError::NoXDGConfigFile { path: config_path });
@@ -100,7 +119,8 @@ impl AppConfig {
     }
 
     pub async fn load(path: &Utf8Path) -> Result<Self, ConfigError> {
-        // TODO: errors
+        log::info!("Loading config file: {path}");
+
         let content = read(path).await.context(FailedReadConfigSnafu {
             path: path.to_path_buf(),
         })?;
