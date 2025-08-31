@@ -16,9 +16,13 @@ async fn main_inner() -> Result<(), ConfigError> {
         .filter_level(cli_args.verbosity.log_level_filter())
         .init();
 
-    // Load default config
-    // TODO: load with CLI argument
-    let config = AppConfig::load_from_xdg().await?;
+    let config = if let Some(config_path) = &cli_args.config {
+        // Config file supplied from CLI
+        AppConfig::load(config_path).await?
+    } else {
+        // Default config
+        AppConfig::load_from_xdg().await?
+    };
 
     // CLI listen option has precedence over config file
     let listener = cli_args.listen.as_ref().unwrap_or(&config.listen);
