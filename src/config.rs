@@ -68,6 +68,7 @@ pub struct AppConfig {
 
     /// Main categories to store content
     // pub media_categories: Arc<RwLock<Vec<CategoryConfig>>>
+    #[serde(default)]
     pub media_categories: Arc<RwLock<Vec<CategoryConfig>>>,
 
     /// IP:PORT or Unix socket path to start the server (default: `127.0.0.1:8000`).
