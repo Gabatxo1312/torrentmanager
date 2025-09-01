@@ -51,9 +51,12 @@ The following files/folders are used:
 
 When a request arrives:
 
-- free space calculation is performed
-- authentication is checked from the reverse proxy via the `REMOTE-USER` HTTP header
-- the request handler is called
+- it's encapsulated in a [timing middleware](src/middleware/timing.rs), which will:
+  - add a `x-generation-time: XXms` HTTP header to all responses
+  - replace the magic string `__GENERATION_TIME__` in any HTML response
+- on most routes, global `AppStateContext` is computed, containing:
+  - the username of the logged-in user, or None
+  - free space calculation for the configured `media_dir`
 
 Additionally, request handlers which interact with the torrent backend check that it's alive and credentials are good, preventing you from uploading/removing torrents when that's not the case.
 
