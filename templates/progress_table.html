@@ -6,7 +6,7 @@
             <th>Name</th>
         </tr>
     </thead>
-    {% for entry in torrents %}
+    {% for entry in torrent_list.torrents %}
     <tr>
         <td>{% if entry.progress == 100 %}<i class="fa fa-angellist"></i>{% else %}{{ entry.progress }}%{% endif %}</td>
         <td class="is-right" align="right">{% if entry.size < 0 %}?{% else %}{{ entry.size | filesizeformat }}{% endif %}</td>
@@ -15,7 +15,7 @@
     {% endfor %}
 </table>
 
-{% if let Some(files) = files %}
+{% if let Some(files) = torrent_list.files %}
 <table class="table">
     <thead>
         <tr>

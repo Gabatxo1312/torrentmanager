@@ -2,7 +2,7 @@ use chrono::{Duration, TimeZone, Utc};
 use hightorrent_api::hightorrent::{SingleTarget, Torrent, TorrentList};
 use serde::Deserialize;
 
-use crate::state::AppState;
+use crate::state::{AppState, error::AppStateError};
 
 #[derive(Clone, Debug)]
 pub struct TorrentListView {
@@ -12,18 +12,21 @@ pub struct TorrentListView {
 }
 
 impl TorrentListView {
-    pub async fn apply_request(req: TorrentListViewRequest, state: &AppState) -> Self {
+    pub async fn apply_request(
+        req: TorrentListViewRequest,
+        state: &AppState,
+    ) -> Result<Self, AppStateError> {
         // Fetch torrent list from torrent backend
-        let list = state.torrent_list().await;
+        let list = state.torrent_list().await?;
 
         // Filter data
         let counter = TorrentListCounter::from_torrent_list(&list);
         let filtered_list = req.filter_torrent_list(list);
 
-        Self {
+        Ok(Self {
             counter,
             filtered_list,
-        }
+        })
     }
 }
 

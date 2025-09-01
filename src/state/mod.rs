@@ -76,13 +76,19 @@ impl AppState {
         free_space::FreeSpace::from_path(&self.config.media_dir).context(FreeSpaceSnafu)
     }
 
-    pub async fn torrent_list(&self) -> TorrentList {
+    pub async fn torrent_list(&self) -> Result<TorrentList, AppStateError> {
         // TODO: errors
-        self.torrent_client.list().await.unwrap()
+        self.torrent_client.list().await.context(APISnafu)
     }
 
-    pub async fn torrent_get_files(&self, target: &SingleTarget) -> Vec<TorrentContent> {
+    pub async fn torrent_get_files(
+        &self,
+        target: &SingleTarget,
+    ) -> Result<Vec<TorrentContent>, AppStateError> {
         // TODO: errors
-        self.torrent_client.get_files(target).await.unwrap()
+        self.torrent_client
+            .get_files(target)
+            .await
+            .context(APISnafu)
     }
 }

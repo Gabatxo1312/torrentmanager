@@ -1,3 +1,5 @@
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use snafu::prelude::*;
 
 use super::free_space::FreeSpaceError;
@@ -11,4 +13,11 @@ pub enum AppStateError {
     API { source: hightorrent_api::ApiError },
     #[snafu(display("Failed to get free space information"))]
     FreeSpace { source: FreeSpaceError },
+}
+
+impl IntoResponse for AppStateError {
+    fn into_response(self) -> Response {
+        // TODO: proper error repsonse template
+        (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
+    }
 }
