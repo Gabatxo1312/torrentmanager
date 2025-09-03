@@ -37,12 +37,13 @@ pub async fn progress(
     State(app_state): State<AppState>,
     Path(view_request): Path<TorrentListViewRequest>,
 ) -> Result<TorrentListTemplate, AppStateError> {
+    let app_state_context = app_state.context().await?;
+
+    // Failing to load the TorrentListView is a fatal error
     let TorrentListView {
         counter,
         filtered_list,
     } = TorrentListView::apply_request(view_request, &app_state).await?;
-
-    let app_state_context = app_state.context().await;
 
     // If only one torrent is inspected, display the content files
     let files = if filtered_list.len() == 1 {

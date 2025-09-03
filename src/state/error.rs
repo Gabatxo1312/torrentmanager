@@ -1,3 +1,5 @@
+use askama::Template;
+use askama_web::WebTemplate;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use snafu::prelude::*;
@@ -15,9 +17,35 @@ pub enum AppStateError {
     FreeSpace { source: FreeSpaceError },
 }
 
+/// Global error page generated from an [AppStateError].
+#[derive(Clone, Debug, Template, WebTemplate)]
+#[template(path = "error.html")]
+pub struct AppStateErrorContext {
+    state: AppStateErrorContextInner,
+}
+
+/// Helper struct so we can reuse base.html
+/// with all it's `state.foo` expressions.
+#[derive(Clone, Debug)]
+pub struct AppStateErrorContextInner {
+    // TODO: typed errors
+    // errors: Vec<AppStateError>,
+    errors: Vec<String>,
+}
+
+impl From<AppStateError> for AppStateErrorContext {
+    fn from(e: AppStateError) -> Self {
+        Self {
+            state: AppStateErrorContextInner {
+                errors: vec![e.to_string()],
+            },
+        }
+    }
+}
+
 impl IntoResponse for AppStateError {
     fn into_response(self) -> Response {
-        // TODO: proper error repsonse template
-        (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
+        let error_context = AppStateErrorContext::from(self);
+        (StatusCode::INTERNAL_SERVER_ERROR, error_context).into_response()
     }
 }

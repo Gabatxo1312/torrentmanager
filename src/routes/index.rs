@@ -1,10 +1,9 @@
 use askama::Template;
 use askama_web::WebTemplate;
 use axum::extract::State;
-use axum::response::IntoResponse;
 
 use crate::extractors::user::User;
-use crate::state::{AppState, AppStateContext};
+use crate::state::{AppState, AppStateContext, error::AppStateError};
 
 use std::collections::HashMap;
 
@@ -22,12 +21,15 @@ pub struct IndexTemplate {
     pub user: Option<User>,
 }
 
-pub async fn index(State(app_state): State<AppState>, user: Option<User>) -> impl IntoResponse {
-    let app_state_context = app_state.context().await;
+pub async fn index(
+    State(app_state): State<AppState>,
+    user: Option<User>,
+) -> Result<IndexTemplate, AppStateError> {
+    let app_state_context = app_state.context().await?;
 
-    IndexTemplate {
+    Ok(IndexTemplate {
         state: app_state_context,
         post: HashMap::new(),
         user,
-    }
+    })
 }

@@ -17,30 +17,25 @@
             <div class="container">
 {% for error in state.errors %}
                 <div class="notification is-danger">
-                {#<h2 style="font-weight: bold; text-align: center;">{{ error|replace(from="\n", to="<br>")|safe }}</h2>#}
+                <h2 style="font-weight: bold; text-align: center;">{{ error }}</h2>
                 </div>
 {% endfor %}
-{% for warning in state.warnings %}
-		<div class="notification is-warning">
-		{#<h2 style="font-weight: bold; text-align: center;">{{ warning|replace(from="\n", to="<br>"|safe) }}</h2>#}
-{% endfor %}
-		</div>
+						</div>
                 {% block main %}{% endblock %}
-            </div>
         </section>
         <footer class="mb-6">
-            {% include "menus/footer.html" %}
+          {% include "menus/footer.html" %}
+					{% block footer_extra %}
 					<div class="container is-centered has-text-centered">
 						{% if let Some(user) = user %}
 						<h3 style="font-weight: bolder;">Logged in as {{ user|safe }}</h3>
 						{% else %}
 						<h3 style="font-weight: bolder;">Not logged in.</h3>
 						{% endif %}
-						{% if let Some(free_space) = state.free_space %}
-						<h3 style="font-weight: bolder;">Free space: {{ free_space }}</h3>
-						{% endif %}
+						<h3 style="font-weight: bolder;">Free space: {{ state.free_space }}</h3>
 						<h3 style="font-weight: bolder;">Page generated in __GENERATION_TIME__</h3>
 					</div>
+					{% endblock %}
         </footer>
 	</body>
 </html>
