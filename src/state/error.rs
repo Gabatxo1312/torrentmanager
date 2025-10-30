@@ -30,6 +30,14 @@ impl AppStateError {
         }
         inner_errors
     }
+
+    // Format an error for the logs
+    pub fn log(&self) {
+        log::error!("{self}");
+        for error in self.iter_chain().skip(1) {
+            log::error!("-> {error}");
+        }
+    }
 }
 
 /// Global error page generated from an [AppStateError].
@@ -51,6 +59,8 @@ pub struct AppStateErrorContextInner {
 
 impl From<AppStateError> for AppStateErrorContext {
     fn from(e: AppStateError) -> Self {
+        // An error is being displayed to the user, make sure it's also written in the logs
+        e.log();
         Self {
             state: AppStateErrorContextInner { errors: vec![e] },
         }
