@@ -2,6 +2,7 @@ use askama::Template;
 use askama_web::WebTemplate;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use snafu::ErrorCompat;
 use snafu::prelude::*;
 
 use super::free_space::FreeSpaceError;
@@ -15,10 +16,24 @@ pub enum AppStateError {
     API { source: hightorrent_api::ApiError },
     #[snafu(display("Failed to get free space information"))]
     FreeSpace { source: FreeSpaceError },
+    #[snafu(display("An other error occurred"))]
+    Other {
+        source: Box<dyn snafu::Error + Send + Sync + 'static>,
+    },
+}
+
+impl AppStateError {
+    pub fn inner_errors(&self) -> Vec<Box<dyn std::error::Error + '_>> {
+        let mut inner_errors = vec![];
+        for error in self.iter_chain().skip(1) {
+            inner_errors.push(Box::new(error).into());
+        }
+        inner_errors
+    }
 }
 
 /// Global error page generated from an [AppStateError].
-#[derive(Clone, Debug, Template, WebTemplate)]
+#[derive(Debug, Template, WebTemplate)]
 #[template(path = "error.html")]
 pub struct AppStateErrorContext {
     state: AppStateErrorContextInner,
@@ -26,19 +41,18 @@ pub struct AppStateErrorContext {
 
 /// Helper struct so we can reuse base.html
 /// with all it's `state.foo` expressions.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct AppStateErrorContextInner {
-    // TODO: typed errors
-    // errors: Vec<AppStateError>,
-    errors: Vec<String>,
+    // TODO: askama doesn't handle recursion well, so we convert
+    // all errors to strings. Maybe related to:
+    // https://github.com/askama-rs/askama/issues/393
+    errors: Vec<AppStateError>,
 }
 
 impl From<AppStateError> for AppStateErrorContext {
     fn from(e: AppStateError) -> Self {
         Self {
-            state: AppStateErrorContextInner {
-                errors: vec![e.to_string()],
-            },
+            state: AppStateErrorContextInner { errors: vec![e] },
         }
     }
 }
@@ -47,5 +61,21 @@ impl IntoResponse for AppStateError {
     fn into_response(self) -> Response {
         let error_context = AppStateErrorContext::from(self);
         (StatusCode::INTERNAL_SERVER_ERROR, error_context).into_response()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_extract_from_any_error() {
+        let res: Result<_, AppStateError> =
+            std::fs::read("/tmp/qsjlkdjsqlkdsqfsqhsjklfhalkjfkjh.toml")
+                .boxed()
+                .context(OtherSnafu);
+
+        assert!(res.is_err());
+        assert_eq!(&res.unwrap_err().to_string(), "An other error occurred");
     }
 }

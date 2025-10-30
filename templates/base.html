@@ -1,4 +1,3 @@
-{#{% import "menus/macro.html" as menus %}#}
 <!DOCTYPE html>
 <html>
 	<head>
@@ -17,7 +16,14 @@
             <div class="container">
 {% for error in state.errors %}
                 <div class="notification is-danger">
-                <h2 style="font-weight: bold; text-align: center;">{{ error }}</h2>
+								<details>
+									<summary>{{ error }}</summary>
+									<ul class="ml-5">
+									{% for inner_error in error.inner_errors() %}
+										<li>→ {{ inner_error }}</li>
+									{% endfor %}
+									</ul>
+								</details>
                 </div>
 {% endfor %}
 						</div>

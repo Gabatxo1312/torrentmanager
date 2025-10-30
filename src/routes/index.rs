@@ -3,7 +3,7 @@ use askama_web::WebTemplate;
 use axum::extract::State;
 
 use crate::extractors::user::User;
-use crate::state::{AppState, AppStateContext, error::AppStateError};
+use crate::state::{AppState, AppStateContext, error::*};
 
 use std::collections::HashMap;
 
