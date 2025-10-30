@@ -31,7 +31,8 @@ pub struct AppState {
 pub struct AppStateContext {
     // TODO: proper categories
     pub categories: Vec<String>,
-    pub errors: Vec<String>,
+    pub errors: Vec<AppStateError>,
+    // pub errors: Vec<String>,
     pub free_space: FreeSpace,
 }
 
