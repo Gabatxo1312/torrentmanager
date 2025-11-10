@@ -1,33 +1,52 @@
-<table class="table">
+<div class="table-responsive-lg">
+  <table class="table">
     <thead>
-        <tr>
-            <th>Progress</th>
-            <th>Size</th>
-            <th>Name</th>
-        </tr>
+      <tr>
+        <th>Progress</th>
+        <th>Size</th>
+        <th>Name</th>
+        <th>Actions</th>
+      </tr>
     </thead>
     {% for entry in torrent_list.torrents %}
-    <tr>
-        <td>{% if entry.progress == 100 %}<i class="fa fa-angellist"></i>{% else %}{{ entry.progress }}%{% endif %}</td>
+      <tr>
+        <td class="py-3">{% if entry.progress == 100 %}<i class="fa fa-angellist"></i>{% else %}{{ entry.progress }}%{% endif %}</td>
+
         <td class="is-right" align="right">{% if entry.size < 0 %}?{% else %}{{ entry.size | filesizeformat }}{% endif %}</td>
-        <td class="is-left" align="left"><a href="/progress/{{ entry.id }}">{{ entry.name }}</a></td>
-    </tr>
+
+        <td class="is-left" align="left">{{ entry.name }}</td>
+
+        <td>
+          <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Actions
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="/progress/{{ entry.id }}">Voir</a></li>
+            </ul>
+          </div>
+        </td>
+      </tr>
     {% endfor %}
-</table>
+  </table>
+</div>
 
 {% if let Some(files) = torrent_list.files %}
-<table class="table">
-    <thead>
+  <div class="table-responsive-lg">
+    <table class="table">
+      <thead>
         <tr>
-            <th>Torrent file</th>
-            <th>Content symlink</th>
+          <th>Torrent file</th>
+          <th>Content symlink</th>
         </tr>
-    </thead>
-    {% for file in files %}
-    <tr>
-        <td align="left">{{ file.path.to_str().unwrap() }}</td>
-        <td>TODO</td>
-    </tr>
-    {% endfor %}
-</table>
+      </thead>
+
+      {% for file in files %}
+        <tr>
+          <td align="left">{{ file.path.to_str().unwrap() }}</td>
+          <td>TODO</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
 {% endif %}

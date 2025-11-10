@@ -1,0 +1,37 @@
+:root {
+  --bs-success: #00A46A;
+  --bs-green: #00A46A;
+  --black: #000;
+  --white: #fff;
+}
+
+.filters .filter-item {
+  padding: 15px 20px;
+  border-radius: 30px;
+  border: 1px solid var(--black);
+  transition: all 0.5s;
+}
+
+.filters .filter-item:hover {
+  background: var(--black);
+  color: var(--white);
+  transition: all 0.5s;
+}
+
+.filters .filter-item.filter-item--active {
+  background: var(--black);
+  color: var(--white);
+}
+
+a {
+  text-decoration: none;
+  color: var(--black);
+}
+
+
+/* Waiting for bootstrap SASS */
+
+.btn-success {
+  border-color: var(--bs-success);
+  background-color: var(--bs-success);
+}

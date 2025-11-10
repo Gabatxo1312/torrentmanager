@@ -1,24 +1,18 @@
-<nav class="navbar fa-2x" role="navigation" aria-label="main navigation" style="max-width: 900px; margin: auto; justify-content: center; height: 6rem;">
-  <div class="navbar-menu" style="flex-grow: 0;">
-    <a class="navbar-item" href="/progress/everything">
-      <span class="icon-text">
-        <span class="icon"><i class="fa fa-globe"></i></span><span>Everything ({{ torrent_list.counter.everything }})</span>
-      </span>
-    </a>
-    <a class="navbar-item" href="/progress/ongoing">
-      <span class="icon-text">
-        <span class="icon"><i class="fa fa-spinner"></i></span><span>Ongoing ({{ torrent_list.counter.ongoing }})</span>
-      </span>
-    </a>
-    <a class="navbar-item" href="/progress/stuck">
-      <span class="icon-text">
-        <span class="icon"><i class="fa fa-ban"></i></span><span>Stuck ({{ torrent_list.counter.stuck }})</span>
-      </span>
-    </a>
-    <a class="navbar-item" href="/progress/unmanaged">
-      <span class="icon-text">
-        <span class="icon"><i class="fa fa-info-circle"></i></span><span>Unmanaged ({{ torrent_list.counter.unmanaged }})</span>
-      </span>
-    </a>
-  </div>
-</nav>
+<div class="filters d-flex align-items-center gap-3 flex-wrap">
+  <a class="filter-item {% if filter.is_filter(TorrentListFilter::Everything) %}filter-item--active{% endif %}" href="/progress/everything">
+    <span>Everything ({{ torrent_list.counter.everything }})</span>
+  </a>
+
+  <a class="filter-item {% if filter.is_filter(TorrentListFilter::Ongoing) %}filter-item--active{% endif %}" href="/progress/ongoing">
+    <span>Ongoing ({{ torrent_list.counter.ongoing }})</span>
+  </a>
+
+  <a class="filter-item {% if filter.is_filter(TorrentListFilter::Stuck) %}filter-item--active{% endif %}" href="/progress/stuck">
+    <span>Stuck ({{ torrent_list.counter.stuck }})</span>
+  </a>
+
+  <a class="filter-item {% if filter.is_filter(TorrentListFilter::Unmanaged) %}filter-item--active{% endif %}" href="/progress/unmanaged">
+    <span>Unmanaged ({{ torrent_list.counter.unmanaged }})</span>
+  </a>
+</div>
+
