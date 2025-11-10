@@ -1,6 +1,10 @@
 <div class="filters d-flex align-items-center gap-3 flex-wrap">
   <a class="filter-item {% if filter.is_filter(TorrentListFilter::Everything) %}filter-item--active{% endif %}" href="/progress/everything">
-    <span>Everything ({{ torrent_list.counter.everything }})</span>
+    <span>All ({{ torrent_list.counter.everything }})</span>
+  </a>
+
+  <a class="filter-item {% if filter.is_filter(TorrentListFilter::Ok) %}filter-item--active{% endif %}" href="/progress/ok">
+    <span>Ok ({{ torrent_list.counter.ok }})</span>
   </a>
 
   <a class="filter-item {% if filter.is_filter(TorrentListFilter::Ongoing) %}filter-item--active{% endif %}" href="/progress/ongoing">

@@ -69,6 +69,7 @@ pub enum TorrentListFilter {
     Ongoing,
     Stuck,
     Unmanaged,
+    Ok,
 }
 
 impl TorrentListFilter {
@@ -76,6 +77,7 @@ impl TorrentListFilter {
         let mut list: Vec<Torrent> = match self {
             Self::Everything => list.into_iter().collect(),
             Self::Ongoing => list.into_iter().filter(is_torrent_ongoing).collect(),
+            Self::Ok => list.into_iter().filter(is_torrent_ok).collect(),
             Self::Stuck => list.into_iter().filter(is_torrent_stuck).collect(),
             Self::Unmanaged => list.into_iter().filter(is_torrent_unmanaged).collect(),
         };
@@ -98,6 +100,8 @@ pub struct TorrentListCounter {
     /// Torrents not known to TorrentManager.
     // TODO: this is actually not implemented yet
     pub unmanaged: u32,
+    /// Torrent successfully downloaded
+    pub ok: u32,
 }
 
 impl TorrentListCounter {
@@ -122,6 +126,11 @@ impl TorrentListCounter {
                 continue;
             }
 
+            if is_torrent_ok(torrent) {
+                counter.ok += 1;
+                continue;
+            }
+
             // Otherwise, the torrent is simply seeding,
             // and we simply don't care.
         }
@@ -134,6 +143,12 @@ impl TorrentListCounter {
 // TODO: not implemented yet
 pub fn is_torrent_unmanaged(_t: &Torrent) -> bool {
     false
+}
+
+/// Check if torrent hasn't finished (progress < 100%)
+/// and is less than 24h hours.
+pub fn is_torrent_ok(t: &Torrent) -> bool {
+    t.progress == 100
 }
 
 /// Check if torrent hasn't finished (progress < 100%)
