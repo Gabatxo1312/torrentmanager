@@ -1,0 +1,7 @@
+media_dir = ""
+media_categories = "" 
+
+[qbittorrent_config]
+web_url = ""
+username = ""
+password = ""

@@ -54,9 +54,12 @@ impl AppState {
     pub async fn new(config: AppConfig) -> Result<Self, AppStateError> {
         // TODO: config for torrent backend
 
-        let torrent_client =
-            QBittorrentClient::new_not_logged_in("http://localhost:8080", "admin", "adminadmin")
-                .context(InitAPISnafu)?;
+        let torrent_client = QBittorrentClient::new_not_logged_in(
+            &config.qbittorrent_config.web_url,
+            &config.qbittorrent_config.username,
+            &config.qbittorrent_config.password,
+        )
+        .context(InitAPISnafu)?;
 
         Ok(Self {
             config,
