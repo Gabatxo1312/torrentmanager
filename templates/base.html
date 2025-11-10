@@ -1,47 +1,44 @@
-<!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<title>{% block title %}TorrentManager{% endblock %}</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" href="/assets/css/bulma.min.css">
-        <link rel="stylesheet" href="/assets/css/fork-awesome.min.css">
-        <link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico">
-        {% block extra_head %}{% endblock extra_head %}
-	</head>
-	<body>
-        {% include "menus/header.html" %}
+  <head>
+    <meta charset="utf-8">
+    <title>{% block title %}TorrentManager{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/css/bootstrap.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
 
-        <section class="section" style="padding: 0;">
-            <div class="container">
-{% for error in state.errors %}
-                <div class="notification is-danger">
-								<details>
-									<summary>{{ error }}</summary>
-									<ul class="ml-5">
-									{% for inner_error in error.inner_errors() %}
-										<li>→ {{ inner_error }}</li>
-									{% endfor %}
-									</ul>
-								</details>
-                </div>
-{% endfor %}
-						</div>
-                {% block main %}{% endblock %}
-        </section>
-        <footer class="mb-6">
-          {% include "menus/footer.html" %}
-					{% block footer_extra %}
-					<div class="container is-centered has-text-centered">
-						{% if let Some(user) = user %}
-						<h3 style="font-weight: bolder;">Logged in as {{ user|safe }}</h3>
-						{% else %}
-						<h3 style="font-weight: bolder;">Not logged in.</h3>
-						{% endif %}
-						<h3 style="font-weight: bolder;">Free space: {{ state.free_space }}</h3>
-						<h3 style="font-weight: bolder;">Page generated in __GENERATION_TIME__</h3>
-					</div>
-					{% endblock %}
-        </footer>
-	</body>
+    <link rel="stylesheet" href="/assets/css/fork-awesome.min.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico">
+    {% block extra_head %}{% endblock extra_head %}
+  </head>
+
+  <body class="d-flex flex-column min-vh-100">
+    {% include "menus/header.html" %}
+
+    <section class="section" style="padding-top: 100px;">
+      <div class="container">
+        {% for error in state.errors %}
+          <div class="notification is-danger">
+            <details>
+              <summary>{{ error }}</summary>
+              <ul class="ml-5">
+                {% for inner_error in error.inner_errors() %}
+                  <li>→ {{ inner_error }}</li>
+                {% endfor %}
+              </ul>
+            </details>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% block main %}{% endblock %}
+    </section>
+
+    <footer class="text-center mt-auto pt-4">
+      {% block footer_extra %}
+        {% include "menus/footer.html" %}
+      {% endblock %}
+    </footer>
+
+    <script src="/assets/javascript/bootstrap.min.js" crossorigin="anonymous"></script>
+  </body>
 </html>

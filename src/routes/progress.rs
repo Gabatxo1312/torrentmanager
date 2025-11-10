@@ -4,7 +4,7 @@ use axum::extract::{Path, State};
 use hightorrent_api::hightorrent::{SingleTarget, Torrent, TorrentContent};
 
 use crate::extractors::torrent_list::{
-    TorrentListCounter, TorrentListView, TorrentListViewRequest,
+    TorrentListCounter, TorrentListFilter, TorrentListView, TorrentListViewRequest,
 };
 use crate::state::{AppState, AppStateContext, error::AppStateError};
 
@@ -15,6 +15,8 @@ pub struct TorrentListTemplate {
     state: AppStateContext,
     /// Specific context for torrent lists.
     torrent_list: TorrentListContext,
+    // Filter object
+    filter: TorrentListViewRequest,
     /// Logged-in user.
     user: Option<String>,
 }
@@ -43,7 +45,7 @@ pub async fn progress(
     let TorrentListView {
         counter,
         filtered_list,
-    } = TorrentListView::apply_request(view_request, &app_state).await?;
+    } = TorrentListView::apply_request(view_request.clone(), &app_state).await?;
 
     // If only one torrent is inspected, display the content files
     let files = if filtered_list.len() == 1 {
@@ -59,6 +61,7 @@ pub async fn progress(
 
     Ok(TorrentListTemplate {
         state: app_state_context,
+        filter: view_request,
         torrent_list: TorrentListContext {
             counter,
             files,

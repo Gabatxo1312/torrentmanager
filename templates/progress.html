@@ -9,16 +9,25 @@
 {% endblock %}
 
 {% block main %}
-<div style="text-align: center; margin: auto;">
-    <h1 class="title">Progress</h1>
-    {% include "menus/progress.html" %}
+  <div class="container">
+    <h1>Torrents list</h1>
 
-    {% if state.errors.len() != 0 %}
-        <h2>Could not reach Bittorrent client (see errors above)</h2>
-    {% else if torrent_list.torrents.len() == 0 %}
-        <h2>No content yet!</h2>
-    {% else %}
-        {% include "progress_table.html" %}
-    {% endif %}
-</div>
+    <div class="card mt-4">
+      <div class="card-body">
+        {% include "menus/progress.html" %}
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-body">
+        {% if state.errors.len() != 0 %}
+          <h2>Could not reach Bittorrent client (see errors above)</h2>
+        {% else if torrent_list.torrents.len() == 0 %}
+          {% include "shared/empty_state.html" %}
+        {% else %}
+          {% include "progress_table.html" %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
 {% endblock %}

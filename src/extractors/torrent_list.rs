@@ -51,10 +51,17 @@ impl TorrentListViewRequest {
             Self::SingleTorrent(target) => vec![list.get(target).unwrap()],
         }
     }
+
+    pub fn is_filter(&self, torrent_list_filter: TorrentListFilter) -> bool {
+        match self {
+            Self::ListFilter(filter) => filter == &torrent_list_filter,
+            _ => false,
+        }
+    }
 }
 
 /// A specific filter applied to the torrent list.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum TorrentListFilter {
     /// All torrents.
