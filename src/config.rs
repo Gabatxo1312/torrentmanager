@@ -45,6 +45,9 @@ pub enum ConfigError {
 ///   to store files for seeding
 /// - contains the directories for the different categories
 ///
+/// The qbittorent config:
+/// - use to connect torrentmanager to an instance of qbittorrent
+///
 /// What is currently not configurable:
 ///
 /// - where magnets/torrents uploaded to TorrentManager are stored, hardcoded
@@ -62,6 +65,8 @@ pub struct AppConfig {
     /// This is not saved in the file, but added manually after loading.
     #[serde(skip, default)]
     config_path: Utf8PathBuf,
+
+    pub qbittorrent_config: QbittorrentConfig,
 
     /// Main directory where content files are stored
     pub media_dir: Utf8PathBuf,
@@ -84,6 +89,16 @@ pub struct AppConfig {
     /// TODO: settings to change permissions on the socket to allow eg. httpd group to read/write
     #[serde(default = "AppConfig::default_listener_address")]
     pub listen: ListenerAddress,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct QbittorrentConfig {
+    // Web URL of your Qbittorrent instance
+    pub web_url: String,
+    // Admin username for accessing qBittorrent
+    pub username: String,
+    // Admin password for accessing qBittorrent
+    pub password: String,
 }
 
 impl AppConfig {
