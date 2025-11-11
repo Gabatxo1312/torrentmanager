@@ -28,11 +28,11 @@ pub enum FreeSpaceError {
 /// Uses (vendored) uu_df from uutils under the hood.
 pub struct FreeSpace {
     /// Number of remaining GiB.
-    free_space_gib: u64,
+    pub free_space_gib: u64,
     /// Number of total GiB.
     total_space_gib: u64,
     /// Percentage of remaining available space.
-    free_space_percent: u64,
+    pub free_space_percent: u64,
 }
 
 impl FreeSpace {

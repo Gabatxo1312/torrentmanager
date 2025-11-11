@@ -28,6 +28,11 @@ a {
   color: var(--black);
 }
 
+.img-64 {
+  height: 64px;
+  width: auto;
+}
+
 
 /* Waiting for bootstrap SASS */
 
