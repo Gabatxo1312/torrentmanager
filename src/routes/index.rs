@@ -39,11 +39,6 @@ pub async fn index(
         .map(|x| x.name)
         .collect();
 
-    // if categories.is_empty() {
-    //     Ok(crate::routes::category::index(State(app_state), user)
-    //         .await?
-    //         .into_response())
-    // } else {
     Ok(IndexTemplate {
         state: app_state_context,
         post: HashMap::new(),
@@ -51,5 +46,4 @@ pub async fn index(
         categories,
     }
     .into_response())
-    // }
 }

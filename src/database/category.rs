@@ -65,6 +65,23 @@ impl CategoryOperator {
             .context(state_error::SqliteSnafu)
     }
 
+    /// Delete a category
+    pub async fn delete(&self, id: i32) -> Result<(), AppStateError> {
+        let db = &self.state.database;
+        let category: Option<Model> = Entity::find_by_id(id)
+            .one(db)
+            .await
+            .context(state_error::SqliteSnafu)?;
+        let category = category.unwrap();
+
+        let _: DeleteResult = category
+            .delete(db)
+            .await
+            .context(state_error::SqliteSnafu)?;
+
+        Ok(())
+    }
+
     /// Create a new category, creating the corresponding directory.
     ///
     /// Fails if:
