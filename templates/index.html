@@ -46,5 +46,26 @@
         <input type="Submit" class="btn btn-success btn-lg" value="Next">
       </div>
     </form>
+
+    {% if categories.len() == 0 %}
+      <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="false">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="staticBackdropLabel">Oops, you don't have any categories yet</h1>
+            </div>
+            <div class="modal-body">
+              {% include "categories/form.html" %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.addEventListener("load", (event) => {
+          const modal = new bootstrap.Modal('#staticBackdrop').show()
+        });
+      </script>
+    {% endif %}
   </div>
 {% endblock %}
