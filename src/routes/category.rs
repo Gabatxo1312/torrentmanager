@@ -1,7 +1,8 @@
 use askama::Template;
 use askama_web::WebTemplate;
 use axum::Form;
-use axum::extract::State;
+use axum::extract::{Path, State};
+use axum::response::Redirect;
 // use sea_orm::entity::*;
 use serde::Deserialize;
 
@@ -47,6 +48,18 @@ pub async fn new(
         state: app_state_context,
         user,
     })
+}
+
+pub async fn delete(
+    State(app_state): State<AppState>,
+    user: Option<User>,
+    Path(id): Path<i32>,
+) -> Result<impl axum::response::IntoResponse, AppStateError> {
+    let categories = CategoryOperator::new(app_state.clone(), user.clone());
+
+    categories.delete(id).await?;
+
+    Ok(Redirect::to("/categories"))
 }
 
 pub async fn create(

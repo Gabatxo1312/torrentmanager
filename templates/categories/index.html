@@ -8,8 +8,8 @@
     </div>
 
     {% if let Some(created) = created %}
-      <div class="alert alert-success">
-        <p>The category "{{ created.name }}" has been successfully created (ID {{ created.id }})</p>
+      <div class="alert alert-success mt-4">
+        <p class="mb-0">The category "{{ created.name }}" has been successfully created (ID {{ created.id }})</p>
       </div>
     {% endif %}
 
@@ -24,12 +24,28 @@
                 <tr>
                   <th>Name</th>
                   <th>Path</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               {% for category in categories %}
                 <tr>
                   <td class="py-3">{{ category.name }}</td>
                   <td class="py-3"><code>{{ category.path }}</code></td>
+                  <td class="">
+                    <div class="dropdown">
+                      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Actions
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li>
+                          <form method="POST" class="mb-0" action="/categories/{{ category.id }}/delete" accept-charset="utf-8">
+
+                            <input type="submit" class="dropdown-item" value="Delete" />
+                          </form>
+                        </li>
+                      </ul>
+                    </div>
+                  </td>
                 </tr>
               {% endfor %}
             </table>
