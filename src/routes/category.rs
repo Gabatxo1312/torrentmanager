@@ -16,8 +16,8 @@ pub struct CategoryForm {
 }
 
 #[derive(Template, WebTemplate)]
-#[template(path = "category.html")]
-pub struct CategoryTemplate {
+#[template(path = "categories/index.html")]
+pub struct CategoriesTemplate {
     /// Global application state
     pub state: AppStateContext,
     /// Category that was just created, to confirm in the UI
@@ -26,6 +26,27 @@ pub struct CategoryTemplate {
     pub categories: Vec<category::Model>,
     /// Logged-in user.
     pub user: Option<User>,
+}
+
+#[derive(Template, WebTemplate)]
+#[template(path = "categories/new.html")]
+pub struct NewCategoryTemplate {
+    /// Global application state
+    pub state: AppStateContext,
+    /// Logged-in user.
+    pub user: Option<User>,
+}
+
+pub async fn new(
+    State(app_state): State<AppState>,
+    user: Option<User>,
+) -> Result<impl axum::response::IntoResponse, AppStateError> {
+    let app_state_context = app_state.context().await?;
+
+    Ok(NewCategoryTemplate {
+        state: app_state_context,
+        user,
+    })
 }
 
 pub async fn create(
@@ -38,7 +59,7 @@ pub async fn create(
     let categories = CategoryOperator::new(app_state.clone(), user.clone());
 
     let created = categories.create(&form).await?;
-    Ok(CategoryTemplate {
+    Ok(CategoriesTemplate {
         categories: categories.list().await?,
         created: Some(created),
         state: app_state_context,
@@ -49,11 +70,11 @@ pub async fn create(
 pub async fn index(
     State(app_state): State<AppState>,
     user: Option<User>,
-) -> Result<CategoryTemplate, AppStateError> {
+) -> Result<CategoriesTemplate, AppStateError> {
     let app_state_context = app_state.context().await?;
     let categories = CategoryOperator::new(app_state.clone(), user.clone());
 
-    Ok(CategoryTemplate {
+    Ok(CategoriesTemplate {
         categories: categories.list().await?,
         created: None,
         state: app_state_context,

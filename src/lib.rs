@@ -20,8 +20,9 @@ pub fn router(state: state::AppState) -> Router {
         // Register dynamic routes
         .route("/", get(routes::index::index))
         .route("/progress/{view_request}", get(routes::progress::progress))
-        .route("/category", get(routes::category::index))
-        .route("/category", post(routes::category::create))
+        .route("/categories", get(routes::category::index))
+        .route("/categories", post(routes::category::create))
+        .route("/categories/new", get(routes::category::new))
         // Register static assets routes
         .nest("/assets", static_router())
         // Insert request timing
