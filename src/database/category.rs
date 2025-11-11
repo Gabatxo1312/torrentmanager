@@ -41,6 +41,8 @@ pub enum CategoryError {
     IO { source: std::io::Error },
     #[snafu(display("Database error"))]
     DB { source: sea_orm::DbErr },
+    #[snafu(display("The category (ID: {id}) does not exist"))]
+    NotFound { id: i32 },
 }
 
 #[derive(Clone, Debug)]
@@ -65,14 +67,19 @@ impl CategoryOperator {
     }
 
     /// Delete a category
-    pub async fn delete(&self, id: i32) -> Result<(), CategoryError> {
+    pub async fn delete(&self, id: i32) -> Result<String, CategoryError> {
         let db = &self.state.database;
         let category: Option<Model> = Entity::find_by_id(id).one(db).await.context(DBSnafu)?;
-        let category = category.unwrap();
 
-        category.delete(db).await.context(DBSnafu)?;
+        match category {
+            Some(category) => {
+                let category_name: String = category.clone().name;
+                category.delete(db).await.context(DBSnafu)?;
 
-        Ok(())
+                Ok(category_name)
+            }
+            None => Err(CategoryError::NotFound { id }),
+        }
     }
 
     /// Create a new category, creating the corresponding directory.

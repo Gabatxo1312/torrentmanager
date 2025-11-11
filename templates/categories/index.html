@@ -7,11 +7,7 @@
       <a href="/categories/new" class="btn btn-success">New category</a>
     </div>
 
-    {% if let Some(created) = created %}
-      <div class="alert alert-success mt-4">
-        <p class="mb-0">The category "{{ created.name }}" has been successfully created (ID {{ created.id }})</p>
-      </div>
-    {% endif %}
+    {% include "shared/alert_operation_status.html" %}
 
     <div class="card mt-4">
       <div class="card-body">
@@ -36,12 +32,10 @@
                       <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Actions
                       </button>
+
                       <ul class="dropdown-menu">
                         <li>
-                          <form method="POST" class="mb-0" action="/categories/{{ category.id }}/delete" accept-charset="utf-8">
-
-                            <input type="submit" class="dropdown-item" value="Delete" />
-                          </form>
+                          <a class="dropdown-item" href="/categories/{{ category.id }}/delete">Delete</a>
                         </li>
                       </ul>
                     </div>

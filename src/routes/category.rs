@@ -2,7 +2,7 @@ use askama::Template;
 use askama_web::WebTemplate;
 use axum::Form;
 use axum::extract::{Path, State};
-use axum::response::{IntoResponse, Redirect};
+use axum::response::IntoResponse;
 // use sea_orm::entity::*;
 use serde::Deserialize;
 use snafu::prelude::*;
@@ -18,17 +18,24 @@ pub struct CategoryForm {
     pub path: String,
 }
 
+pub struct OperationStatus {
+    /// Status of operation
+    pub success: bool,
+    /// Message for confirmation alert
+    pub message: String,
+}
+
 #[derive(Template, WebTemplate)]
 #[template(path = "categories/index.html")]
 pub struct CategoriesTemplate {
     /// Global application state
     pub state: AppStateContext,
-    /// Category that was just created, to confirm in the UI
-    pub created: Option<category::Model>,
     /// Categories found in database
     pub categories: Vec<category::Model>,
     /// Logged-in user.
     pub user: Option<User>,
+    /// Operation status for UI confirmation
+    pub operation_status: Option<OperationStatus>,
 }
 
 #[derive(Template, WebTemplate)]
@@ -63,11 +70,31 @@ pub async fn delete(
     user: Option<User>,
     Path(id): Path<i32>,
 ) -> Result<impl axum::response::IntoResponse, AppStateError> {
+    let app_state_context = app_state.context().await?;
     let categories = CategoryOperator::new(app_state.clone(), user.clone());
 
-    categories.delete(id).await.context(CategorySnafu)?;
+    let deleted = categories.delete(id).await;
 
-    Ok(Redirect::to("/categories"))
+    match deleted {
+        Ok(name) => Ok(CategoriesTemplate {
+            categories: categories.list().await.context(CategorySnafu)?,
+            operation_status: Some(OperationStatus {
+                success: true,
+                message: format!("The category {} has been successfully deleted", name),
+            }),
+            state: app_state_context,
+            user,
+        }),
+        Err(error) => Ok(CategoriesTemplate {
+            categories: categories.list().await.context(CategorySnafu)?,
+            operation_status: Some(OperationStatus {
+                success: false,
+                message: format!("{}", error),
+            }),
+            state: app_state_context,
+            user,
+        }),
+    }
 }
 
 pub async fn create(
@@ -81,11 +108,17 @@ pub async fn create(
     let created = categories.create(&form).await;
 
     match created {
-        Ok(_) => Ok(CategoriesTemplate {
+        Ok(created) => Ok(CategoriesTemplate {
             categories: categories.list().await.context(CategorySnafu)?,
-            created: Some(created.context(CategorySnafu)?),
             state: app_state_context,
             user,
+            operation_status: Some(OperationStatus {
+                success: true,
+                message: format!(
+                    "The category {} has been successfully created (ID {})",
+                    created.name, created.id
+                ),
+            }),
         }
         .into_response()),
         Err(error) => Ok(NewCategoryTemplate {
@@ -107,8 +140,8 @@ pub async fn index(
 
     Ok(CategoriesTemplate {
         categories: categories.list().await.context(CategorySnafu)?,
-        created: None,
         state: app_state_context,
         user,
+        operation_status: None,
     })
 }
