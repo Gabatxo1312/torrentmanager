@@ -6,7 +6,6 @@ use snafu::prelude::*;
 use crate::extractors::user::User;
 use crate::routes::category::CategoryForm;
 use crate::state::AppState;
-use crate::state::error::{self as state_error, AppStateError};
 
 /// A category to store associated files.
 ///
@@ -58,26 +57,20 @@ impl CategoryOperator {
     /// List categories
     ///
     /// Should not fail, unless SQLite was corrupted for some reason.
-    pub async fn list(&self) -> Result<Vec<Model>, AppStateError> {
+    pub async fn list(&self) -> Result<Vec<Model>, CategoryError> {
         Entity::find()
             .all(&self.state.database)
             .await
-            .context(state_error::SqliteSnafu)
+            .context(DBSnafu)
     }
 
     /// Delete a category
-    pub async fn delete(&self, id: i32) -> Result<(), AppStateError> {
+    pub async fn delete(&self, id: i32) -> Result<(), CategoryError> {
         let db = &self.state.database;
-        let category: Option<Model> = Entity::find_by_id(id)
-            .one(db)
-            .await
-            .context(state_error::SqliteSnafu)?;
+        let category: Option<Model> = Entity::find_by_id(id).one(db).await.context(DBSnafu)?;
         let category = category.unwrap();
 
-        let _: DeleteResult = category
-            .delete(db)
-            .await
-            .context(state_error::SqliteSnafu)?;
+        category.delete(db).await.context(DBSnafu)?;
 
         Ok(())
     }
@@ -88,34 +81,28 @@ impl CategoryOperator {
     ///
     /// - name or path is already taken (they should be unique)
     /// - path parent directory does not exist (to avoid completely wrong paths)
-    pub async fn create(&self, f: &CategoryForm) -> Result<Model, AppStateError> {
+    pub async fn create(&self, f: &CategoryForm) -> Result<Model, CategoryError> {
         let dir = Utf8PathBuf::from(&f.path);
         let parent = dir.parent().unwrap();
 
-        if !tokio::fs::try_exists(parent)
-            .await
-            .context(IOSnafu)
-            .context(state_error::CategorySnafu)?
-        {
+        if !tokio::fs::try_exists(parent).await.context(IOSnafu)? {
             return Err(CategoryError::ParentDir {
                 path: parent.to_string(),
-            })
-            .context(state_error::CategorySnafu);
+            });
         }
 
         // Check duplicates
         let list = self.list().await?;
+
         if list.iter().any(|x| x.name == f.name) {
             return Err(CategoryError::NameTaken {
                 name: f.name.clone(),
-            })
-            .context(state_error::CategorySnafu);
+            });
         }
         if list.iter().any(|x| x.path == f.path) {
             return Err(CategoryError::PathTaken {
                 path: f.path.clone(),
-            })
-            .context(state_error::CategorySnafu);
+            });
         }
 
         let model = ActiveModel {
@@ -125,8 +112,7 @@ impl CategoryOperator {
         }
         .save(&self.state.database)
         .await
-        .context(DBSnafu)
-        .context(state_error::CategorySnafu)?;
+        .context(DBSnafu)?;
 
         Ok(model.try_into_model().unwrap())
     }
