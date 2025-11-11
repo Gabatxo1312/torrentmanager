@@ -47,5 +47,5 @@ pub struct OperationLog {
     pub operation: OperationType,
     pub operation_id: OperationId,
     // Raw operation parameters
-    pub operation_form: Operation,
+    pub operation_form: Option<Operation>,
 }

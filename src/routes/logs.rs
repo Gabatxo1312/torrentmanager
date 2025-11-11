@@ -4,11 +4,12 @@ use axum::extract::State;
 use snafu::prelude::*;
 
 use crate::database::operation::OperationLog;
+use crate::database::operation::OperationType;
 use crate::extractors::user::User;
 use crate::state::{AppState, AppStateContext, error::*};
 
 #[derive(Template, WebTemplate)]
-#[template(path = "logs.html")]
+#[template(path = "logs/index.html")]
 pub struct LogTemplate {
     pub state: AppStateContext,
     pub logs: Vec<OperationLog>,

@@ -3,6 +3,13 @@
   --bs-green: #00A46A;
   --black: #000;
   --white: #fff;
+  --terminal-background: #0d0d0d;
+  --terminal-color: #ccc;
+  --terminal-box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  --terminal-red: #f44336;
+  --terminal-yellow: #ffeb3b;
+  --terminal-info: #9cdcfe;
+  --terminal-dark-grey: #555;
 }
 
 .filters .filter-item {
@@ -33,6 +40,59 @@ a {
   width: auto;
 }
 
+/* Terminal style */
+
+.log-container {
+  background: var(--terminal-background);
+  font-family: "Fira Code", monospace;
+  border: 1px solid var(--terminal-color);
+  padding: 35px;
+  border-radius: 6px;
+  overflow-y: auto;
+  box-shadow: var(--terminal-box-shadow);
+  color: var(--terminal-color);
+  border: 1px solid var(--terminal-color);
+  line-height: 1.4;
+}
+
+.log-line {
+  position: relative;
+  color: var(--white);
+  padding-left: 20px;
+  margin-bottom: 20px;
+}
+
+.log-line::before {
+  content: "$ ";
+  color: var(--terminal-dark-grey);
+  position: absolute;
+  left: -3px;
+  top: -1;
+}
+
+.log-line:last-child {
+  margin-bottom: 0px;
+}
+
+.log-line .log-red {
+  color: var(--terminal-red);
+}
+
+.log-line .log-green {
+  color: var(--bs-success);
+}
+
+.log-line .log-yellow {
+  color: var(--terminal-yellow);
+}
+
+.log-user {
+  color: var(--terminal-info);
+}
+
+.log-object {
+  color: var(--terminal-color);
+}
 
 /* Waiting for bootstrap SASS */
 
@@ -40,3 +100,4 @@ a {
   border-color: var(--bs-success);
   background-color: var(--bs-success);
 }
+

@@ -72,7 +72,7 @@ pub async fn delete(
     let app_state_context = app_state.context().await?;
     let categories = CategoryOperator::new(app_state.clone(), user.clone());
 
-    let deleted = categories.delete(id).await;
+    let deleted = categories.delete(id, user.clone()).await;
 
     match deleted {
         Ok(name) => Ok(CategoriesTemplate {

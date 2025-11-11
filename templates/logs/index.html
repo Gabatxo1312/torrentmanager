@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block main %}
+  <div class="container">
+    <h1>Logs</h1>
+
+    <div class="log-container mt-4">
+      {% for log in logs %}
+        <div class="log-line">
+          <code class="text-white">
+            {% match log.operation_form %}
+              {% when Some(operation_form) %}
+                <details>
+                  <summary>
+                    {% include "logs/log_line.html" %}
+                  </summary>
+                  <p class="mt-2 mb-3">{{ operation_form }}</p>
+                </details>
+              {% when None %}
+                <p class="mb-0">
+                  {% include "logs/log_line.html" %}
+                </p>
+            {% endmatch %}
+          </code>
+        </div>
+      {% endfor %}
+      <!-- Exemple de lignes de log -->
+    </div>
+  </div>
+{% endblock %}
