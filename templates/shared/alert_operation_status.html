@@ -1,6 +1,6 @@
-{% if let Some(operation_status) = operation_status %}
-  <div class="alert {% if operation_status.success %}alert-success{% else %}alert-danger{% endif %} mt-4">
-    <p class="mb-0">{{ operation_status.message }}</p>
+{% if let Some(flash) = flash %}
+  <div class="alert {% if flash.success %}alert-success{% else %}alert-danger{% endif %} mt-4">
+    <p class="mb-0">{{ flash.message }}</p>
   </div>
 {% endif %}
 

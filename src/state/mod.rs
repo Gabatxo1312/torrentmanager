@@ -7,6 +7,7 @@ use snafu::prelude::*;
 use crate::config::AppConfig;
 
 pub mod error;
+pub mod flash_message;
 pub mod free_space;
 pub mod logger;
 

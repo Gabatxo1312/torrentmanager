@@ -2,26 +2,21 @@ use askama::Template;
 use askama_web::WebTemplate;
 use axum::Form;
 use axum::extract::{Path, State};
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Redirect};
+use axum_extra::extract::CookieJar;
 use serde::{Deserialize, Serialize};
 use snafu::prelude::*;
 
 use crate::database::category::CategoryError;
 use crate::database::{category, category::CategoryOperator};
 use crate::extractors::user::User;
+use crate::state::flash_message::{OperationStatus, get_cookie};
 use crate::state::{AppState, AppStateContext, error::*};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CategoryForm {
     pub name: String,
     pub path: String,
-}
-
-pub struct OperationStatus {
-    /// Status of operation
-    pub success: bool,
-    /// Message for confirmation alert
-    pub message: String,
 }
 
 #[derive(Template, WebTemplate)]
@@ -34,7 +29,7 @@ pub struct CategoriesTemplate {
     /// Logged-in user.
     pub user: Option<User>,
     /// Operation status for UI confirmation
-    pub operation_status: Option<OperationStatus>,
+    pub flash: Option<OperationStatus>,
 }
 
 #[derive(Template, WebTemplate)]
@@ -68,37 +63,33 @@ pub async fn delete(
     State(app_state): State<AppState>,
     user: Option<User>,
     Path(id): Path<i32>,
+    jar: CookieJar,
 ) -> Result<impl axum::response::IntoResponse, AppStateError> {
-    let app_state_context = app_state.context().await?;
+    // let app_state_context = app_state.context().await?;
     let categories = CategoryOperator::new(app_state.clone(), user.clone());
 
     let deleted = categories.delete(id, user.clone()).await;
 
-    match deleted {
-        Ok(name) => Ok(CategoriesTemplate {
-            categories: categories.list().await.context(CategorySnafu)?,
-            operation_status: Some(OperationStatus {
-                success: true,
-                message: format!("The category {} has been successfully deleted", name),
-            }),
-            state: app_state_context,
-            user,
-        }),
-        Err(error) => Ok(CategoriesTemplate {
-            categories: categories.list().await.context(CategorySnafu)?,
-            operation_status: Some(OperationStatus {
-                success: false,
-                message: format!("{}", error),
-            }),
-            state: app_state_context,
-            user,
-        }),
-    }
+    let operation_status = match deleted {
+        Ok(name) => OperationStatus {
+            success: true,
+            message: format!("The category {} has been successfully deleted", name),
+        },
+        Err(error) => OperationStatus {
+            success: false,
+            message: format!("{}", error),
+        },
+    };
+
+    let jar = operation_status.set_cookie(jar);
+
+    Ok((jar, Redirect::to("/categories")))
 }
 
 pub async fn create(
     State(app_state): State<AppState>,
     user: Option<User>,
+    jar: CookieJar,
     Form(form): Form<CategoryForm>,
 ) -> Result<impl axum::response::IntoResponse, AppStateError> {
     let app_state_context = app_state.context().await?;
@@ -107,40 +98,49 @@ pub async fn create(
     let created = categories.create(&form, user.clone()).await;
 
     match created {
-        Ok(created) => Ok(CategoriesTemplate {
-            categories: categories.list().await.context(CategorySnafu)?,
-            state: app_state_context,
-            user,
-            operation_status: Some(OperationStatus {
+        Ok(created) => {
+            let operation_status = OperationStatus {
                 success: true,
                 message: format!(
                     "The category {} has been successfully created (ID {})",
                     created.name, created.id
                 ),
-            }),
+            };
+
+            let jar = operation_status.set_cookie(jar);
+
+            Ok((jar, Redirect::to("/categories").into_response()))
         }
-        .into_response()),
-        Err(error) => Ok(NewCategoryTemplate {
-            state: app_state_context,
-            user,
-            category_form: Some(form),
-            error: Some(error),
-        }
-        .into_response()),
+        Err(error) => Ok((
+            jar,
+            NewCategoryTemplate {
+                state: app_state_context,
+                user,
+                category_form: Some(form),
+                error: Some(error),
+            }
+            .into_response(),
+        )),
     }
 }
 
 pub async fn index(
     State(app_state): State<AppState>,
     user: Option<User>,
-) -> Result<CategoriesTemplate, AppStateError> {
+    jar: CookieJar,
+) -> Result<(CookieJar, CategoriesTemplate), AppStateError> {
     let app_state_context = app_state.context().await?;
     let categories = CategoryOperator::new(app_state.clone(), user.clone());
 
-    Ok(CategoriesTemplate {
-        categories: categories.list().await.context(CategorySnafu)?,
-        state: app_state_context,
-        user,
-        operation_status: None,
-    })
+    let (jar, operation_status) = get_cookie(jar);
+
+    Ok((
+        jar,
+        CategoriesTemplate {
+            categories: categories.list().await.context(CategorySnafu)?,
+            state: app_state_context,
+            user,
+            flash: operation_status,
+        },
+    ))
 }
