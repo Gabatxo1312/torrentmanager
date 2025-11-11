@@ -151,10 +151,10 @@ mod tests {
                 name: "object".to_string(),
                 object_id: 1,
             },
-            operation_form: Operation::Category(CategoryForm {
+            operation_form: Some(Operation::Category(CategoryForm {
                 name: "object".to_string(),
                 path: "path".to_string(),
-            }),
+            })),
         };
 
         for _i in 0..100 {
@@ -191,10 +191,10 @@ mod tests {
                 name: "object".to_string(),
                 object_id: 1,
             },
-            operation_form: Operation::Category(CategoryForm {
+            operation_form: Some(Operation::Category(CategoryForm {
                 name: "object".to_string(),
                 path: "path".to_string(),
-            }),
+            })),
         };
 
         for i in 0..200 {

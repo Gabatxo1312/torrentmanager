@@ -72,16 +72,34 @@ impl CategoryOperator {
     }
 
     /// Delete a category
-    pub async fn delete(&self, id: i32) -> Result<String, CategoryError> {
+    pub async fn delete(&self, id: i32, user: Option<User>) -> Result<String, CategoryError> {
         let db = &self.state.database;
         let category: Option<Model> = Entity::find_by_id(id).one(db).await.context(DBSnafu)?;
 
         match category {
             Some(category) => {
-                let category_name: String = category.clone().name;
+                let category_clone: Model = category.clone();
                 category.delete(db).await.context(DBSnafu)?;
 
-                Ok(category_name)
+                let operation_log = OperationLog {
+                    user,
+                    date: Utc::now(),
+                    table: Table::Category,
+                    operation: OperationType::Delete,
+                    operation_id: OperationId {
+                        object_id: category_clone.id,
+                        name: category_clone.name.to_owned(),
+                    },
+                    operation_form: None,
+                };
+
+                self.state
+                    .logger
+                    .write(operation_log)
+                    .await
+                    .context(LoggerSnafu)?;
+
+                Ok(category_clone.name)
             }
             None => Err(CategoryError::NotFound { id }),
         }
@@ -142,7 +160,7 @@ impl CategoryOperator {
                 object_id: model.id.to_owned(),
                 name: f.name.to_string(),
             },
-            operation_form: Operation::Category(f.clone()),
+            operation_form: Some(Operation::Category(f.clone())),
         };
 
         self.state
