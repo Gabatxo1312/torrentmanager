@@ -73,7 +73,10 @@ impl AppState {
         let database = Database::connect(format!("sqlite://{}?mode=rwc", &sqlite_path))
             .await
             .context(SqliteSnafu)?;
-        Migrator::up(&database, None).await.unwrap();
+
+        Migrator::up(&database, None)
+            .await
+            .context(MigrationSnafu)?;
 
         let logger = Logger::new(config.log_path.clone())
             .await
