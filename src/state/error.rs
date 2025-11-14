@@ -28,6 +28,8 @@ pub enum AppStateError {
     },
     #[snafu(display("Category error"))]
     Category { source: CategoryError },
+    #[snafu(display("Error during migration"))]
+    Migration { source: migration::DbErr },
 }
 
 impl AppStateError {
