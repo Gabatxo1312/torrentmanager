@@ -7,6 +7,7 @@ use snafu::prelude::*;
 // TUTORIAL: https://github.com/SeaQL/sea-orm/blob/master/examples/axum_example/
 use crate::database::category::{self, CategoryOperator};
 use crate::extractors::user::User;
+use crate::routes::magnet::MagnetForm;
 use crate::state::flash_message::{OperationStatus, get_cookie};
 use crate::state::{AppState, AppStateContext, error::*};
 
@@ -32,6 +33,11 @@ pub struct UploadTemplate {
     pub user: Option<User>,
     /// Categories
     pub categories: Vec<String>,
+    // TODO: also support torrent upload
+    /// Magnet upload form
+    pub post: Option<MagnetForm>,
+    /// Error with submitted magnet
+    pub post_error: Option<AppStateError>,
 }
 
 impl IndexTemplate {
@@ -75,7 +81,15 @@ impl UploadTemplate {
             state: app_state.context().await?,
             user,
             categories,
+            post: None,
+            post_error: None,
         })
+    }
+
+    pub fn with_errored_form(mut self, form: MagnetForm, error: AppStateError) -> Self {
+        self.post = Some(form);
+        self.post_error = Some(error);
+        self
     }
 }
 

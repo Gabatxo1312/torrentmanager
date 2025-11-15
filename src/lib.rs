@@ -32,6 +32,10 @@ pub fn router(state: state::AppState) -> Router {
         )
         .route("/folders", post(routes::content_folder::create))
         .route("/logs", get(routes::logs::index))
+        .route("/magnet/upload", post(routes::magnet::upload))
+        .route("/magnet/upload", get(routes::magnet::get_upload))
+        .route("/magnet", get(routes::magnet::list))
+        .route("/magnet/{id}", get(routes::magnet::show))
         // Register static assets routes
         .nest("/assets", static_router())
         // Insert request timing
