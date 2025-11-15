@@ -36,6 +36,10 @@ pub enum AppStateError {
     ContentFolder { source: ContentFolderError },
     #[snafu(display("IO error"))]
     IO { source: std::io::Error },
+    #[snafu(display("Magnet upload error"))]
+    MagnetUpload {
+        source: crate::database::magnet::MagnetError,
+    },
 }
 
 impl AppStateError {

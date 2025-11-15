@@ -7,6 +7,7 @@ use snafu::prelude::*;
 // TUTORIAL: https://github.com/SeaQL/sea-orm/blob/master/examples/axum_example/
 use crate::database::category::{self, CategoryOperator};
 use crate::extractors::user::User;
+use crate::routes::magnet::MagnetForm;
 use crate::state::flash_message::{OperationStatus, get_cookie};
 use crate::state::{AppState, AppStateContext, error::*};
 
@@ -32,6 +33,11 @@ pub struct UploadTemplate {
     pub user: Option<User>,
     /// Categories
     pub categories: Vec<String>,
+    // TODO: also support torrent upload
+    /// Magnet upload form
+    pub post: Option<MagnetForm>,
+    /// Error with submitted magnet
+    pub post_error: Option<AppStateError>,
 }
 
 impl IndexTemplate {
@@ -61,35 +67,10 @@ impl IndexTemplate {
     }
 }
 
-impl UploadTemplate {
-    pub async fn new(app_state: AppState, user: Option<User>) -> Result<Self, AppStateError> {
-        let categories: Vec<String> = CategoryOperator::new(app_state.clone(), user.clone())
-            .list()
-            .await
-            .context(CategorySnafu)?
-            .into_iter()
-            .map(|x| x.name.to_string())
-            .collect();
-
-        Ok(UploadTemplate {
-            state: app_state.context().await?,
-            user,
-            categories,
-        })
-    }
-}
-
 pub async fn index(
     State(app_state): State<AppState>,
     user: Option<User>,
     jar: CookieJar,
 ) -> Result<(CookieJar, IndexTemplate), AppStateError> {
     IndexTemplate::new(app_state, user, jar).await
-}
-
-pub async fn upload(
-    State(app_state): State<AppState>,
-    user: Option<User>,
-) -> Result<UploadTemplate, AppStateError> {
-    UploadTemplate::new(app_state, user).await
 }
