@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use snafu::prelude::*;
 
 use crate::database::category::CategoryError;
+use crate::database::content_folder;
 use crate::database::{category, category::CategoryOperator};
 use crate::extractors::normalized_path::*;
 use crate::extractors::user::User;
@@ -151,6 +152,8 @@ pub async fn index(
 pub struct CategoryShowTemplate {
     /// Global application state
     pub state: AppStateContext,
+    /// Categories found in database
+    pub content_folders: Vec<content_folder::Model>,
     /// Logged-in user.
     pub user: Option<User>,
     /// Category
@@ -169,7 +172,15 @@ pub async fn show(
         .await
         .context(CategorySnafu)?;
 
+    // get all content folders in this category
+    let content_folders: Vec<content_folder::Model> =
+        CategoryOperator::new(app_state.clone(), user.clone())
+            .list_folders(category.id)
+            .await
+            .context(CategorySnafu)?;
+
     Ok(CategoryShowTemplate {
+        content_folders,
         category,
         state: app_state_context,
         user,
