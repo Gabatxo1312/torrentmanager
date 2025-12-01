@@ -46,7 +46,9 @@ pub enum CategoryError {
     #[snafu(display("Database error"))]
     DB { source: sea_orm::DbErr },
     #[snafu(display("The category (ID: {id}) does not exist"))]
-    NotFound { id: i32 },
+    IDNotFound { id: i32 },
+    #[snafu(display("The category (Name: {name}) does not exist"))]
+    NameNotFound { name: String },
     #[snafu(display("Failed to save the operation log"))]
     Logger { source: LoggerError },
 }
@@ -70,6 +72,20 @@ impl CategoryOperator {
             .all(&self.state.database)
             .await
             .context(DBSnafu)
+    }
+
+    /// Find one category by Name
+    pub async fn find_by_name(&self, name: String) -> Result<Model, CategoryError> {
+        let category = Entity::find()
+            .filter(Column::Name.contains(name.clone()))
+            .one(&self.state.database)
+            .await
+            .context(DBSnafu)?;
+
+        match category {
+            Some(category) => Ok(category),
+            None => Err(CategoryError::NameNotFound { name }),
+        }
     }
 
     /// Delete a category
@@ -102,7 +118,7 @@ impl CategoryOperator {
 
                 Ok(category_clone.name.to_string())
             }
-            None => Err(CategoryError::NotFound { id }),
+            None => Err(CategoryError::IDNotFound { id }),
         }
     }
 
