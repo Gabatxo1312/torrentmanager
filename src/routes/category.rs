@@ -144,3 +144,33 @@ pub async fn index(
         },
     ))
 }
+
+#[derive(Template, WebTemplate)]
+#[template(path = "categories/show.html")]
+pub struct CategoryShowTemplate {
+    /// Global application state
+    pub state: AppStateContext,
+    /// Logged-in user.
+    pub user: Option<User>,
+    /// Category
+    category: category::Model,
+}
+
+pub async fn show(
+    State(app_state): State<AppState>,
+    user: Option<User>,
+    Path(category_name): Path<String>,
+) -> Result<CategoryShowTemplate, AppStateError> {
+    let app_state_context = app_state.context().await?;
+
+    let category: category::Model = CategoryOperator::new(app_state.clone(), user.clone())
+        .find_by_name(category_name.to_string())
+        .await
+        .context(CategorySnafu)?;
+
+    Ok(CategoryShowTemplate {
+        category,
+        state: app_state_context,
+        user,
+    })
+}
