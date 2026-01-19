@@ -12,26 +12,13 @@ use crate::database::content_folder;
 use crate::database::{category, category::CategoryOperator};
 use crate::extractors::normalized_path::*;
 use crate::extractors::user::User;
-use crate::state::flash_message::{OperationStatus, get_cookie};
+use crate::state::flash_message::OperationStatus;
 use crate::state::{AppState, AppStateContext, error::*};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CategoryForm {
     pub name: NormalizedPathComponent,
     pub path: NormalizedPathAbsolute,
-}
-
-#[derive(Template, WebTemplate)]
-#[template(path = "categories/index.html")]
-pub struct CategoriesTemplate {
-    /// Global application state
-    pub state: AppStateContext,
-    /// Categories found in database
-    pub categories: Vec<category::Model>,
-    /// Logged-in user.
-    pub user: Option<User>,
-    /// Operation status for UI confirmation
-    pub flash: Option<OperationStatus>,
 }
 
 #[derive(Template, WebTemplate)]
@@ -94,7 +81,6 @@ pub async fn create(
     jar: CookieJar,
     Form(form): Form<CategoryForm>,
 ) -> Result<impl axum::response::IntoResponse, AppStateError> {
-    let app_state_context = app_state.context().await?;
     let categories = CategoryOperator::new(app_state.clone(), user.clone());
 
     let created = categories.create(&form, user.clone()).await;
@@ -111,40 +97,19 @@ pub async fn create(
 
             let jar = operation_status.set_cookie(jar);
 
-            Ok((jar, Redirect::to("/categories").into_response()))
+            Ok((jar, Redirect::to("/").into_response()))
         }
-        Err(error) => Ok((
-            jar,
-            NewCategoryTemplate {
-                state: app_state_context,
-                user,
-                category_form: Some(form),
-                error: Some(error),
-            }
-            .into_response(),
-        )),
+        Err(error) => {
+            let operation_status = OperationStatus {
+                success: false,
+                message: format!("{}", error),
+            };
+
+            let jar = operation_status.set_cookie(jar);
+
+            Ok((jar, Redirect::to("/").into_response()))
+        }
     }
-}
-
-pub async fn index(
-    State(app_state): State<AppState>,
-    user: Option<User>,
-    jar: CookieJar,
-) -> Result<(CookieJar, CategoriesTemplate), AppStateError> {
-    let app_state_context = app_state.context().await?;
-    let categories = CategoryOperator::new(app_state.clone(), user.clone());
-
-    let (jar, operation_status) = get_cookie(jar);
-
-    Ok((
-        jar,
-        CategoriesTemplate {
-            categories: categories.list().await.context(CategorySnafu)?,
-            state: app_state_context,
-            user,
-            flash: operation_status,
-        },
-    ))
 }
 
 #[derive(Template, WebTemplate)]

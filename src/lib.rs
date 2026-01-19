@@ -22,7 +22,6 @@ pub fn router(state: state::AppState) -> Router {
         .route("/", get(routes::index::index))
         .route("/upload", get(routes::index::upload))
         .route("/progress/{view_request}", get(routes::progress::progress))
-        .route("/categories", get(routes::category::index))
         .route("/categories", post(routes::category::create))
         .route("/categories/new", get(routes::category::new))
         .route("/categories/{id}/delete", get(routes::category::delete))
