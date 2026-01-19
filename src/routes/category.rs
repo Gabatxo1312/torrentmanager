@@ -12,7 +12,7 @@ use crate::database::content_folder;
 use crate::database::{category, category::CategoryOperator};
 use crate::extractors::normalized_path::*;
 use crate::extractors::user::User;
-use crate::state::flash_message::OperationStatus;
+use crate::state::flash_message::{OperationStatus, get_cookie};
 use crate::state::{AppState, AppStateContext, error::*};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -123,13 +123,16 @@ pub struct CategoryShowTemplate {
     pub user: Option<User>,
     /// Category
     category: category::Model,
+    /// Operation status for UI confirmation (Cookie)
+    pub flash: Option<OperationStatus>,
 }
 
 pub async fn show(
     State(app_state): State<AppState>,
     user: Option<User>,
     Path(category_name): Path<String>,
-) -> Result<CategoryShowTemplate, AppStateError> {
+    jar: CookieJar,
+) -> Result<impl IntoResponse, AppStateError> {
     let app_state_context = app_state.context().await?;
 
     let category: category::Model = CategoryOperator::new(app_state.clone(), user.clone())
@@ -144,10 +147,16 @@ pub async fn show(
             .await
             .context(CategorySnafu)?;
 
-    Ok(CategoryShowTemplate {
-        content_folders,
-        category,
-        state: app_state_context,
-        user,
-    })
+    let (jar, operation_status) = get_cookie(jar);
+
+    Ok((
+        jar,
+        CategoryShowTemplate {
+            content_folders,
+            category,
+            state: app_state_context,
+            user,
+            flash: operation_status,
+        },
+    ))
 }
