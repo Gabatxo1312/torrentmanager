@@ -31,7 +31,7 @@
 
   {% for folder in content_folders %}
     <li class="list-group-item py-3">
-      <a class="d-block text-decoration-none" href="/folders/{{category.name}}{{ folder.path }}">
+      <a class="d-block text-decoration-none" href="{{ CategoryShowTemplate::content_folder_show_url(category.name, folder.path, parameter) }}">
         <div class="row">
           <div class="col-md-9">
             <div class="d-flex align-items-center">

@@ -5,24 +5,30 @@
         <th>Progress</th>
         <th>Size</th>
         <th>Name</th>
+        <th>Status</th>
         <th>Actions</th>
       </tr>
     </thead>
     {% for entry in torrent_list.torrents %}
       <tr>
-        <td class="py-3">{% if entry.progress == 100 %}<i class="fa fa-angellist"></i>{% else %}{{ entry.progress }}%{% endif %}</td>
+        <td class="align-middle">{% if entry.progress == 100 %}<i class="fa text-success fa-angellist"></i>{% else %}{{ entry.progress }}%{% endif %}</td>
 
-        <td class="is-right" align="right">{% if entry.size < 0 %}?{% else %}{{ entry.size | filesizeformat }}{% endif %}</td>
+        <td class="align-middle">{% if entry.size < 0 %}?{% else %}{{ entry.size | filesizeformat }}{% endif %}</td>
 
-        <td class="is-left" align="left">{{ entry.name }}</td>
+        <td class="align-middle">{{ entry.name }}</td>
+
+        <td class="align-middle" align="left">
+          <span class="badge text-bg-danger">Inconnu</span>
+        </td>
 
         <td>
           <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
               Actions
             </button>
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="/progress/{{ entry.id }}">Voir</a></li>
+              <li><a class="dropdown-item" href="/?torrent_id={{ entry.id }}">Importer dans torrent manager</a></li>
             </ul>
           </div>
         </td>

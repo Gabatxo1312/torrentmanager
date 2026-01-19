@@ -23,7 +23,7 @@
 {% block system_list %}
   {% for category in categories %}
     <li class="list-group-item py-3">
-      <a class="d-block text-decoration-none" href="/folders/{{ category.name }}">
+      <a class="d-block text-decoration-none" href="{{ IndexTemplate::category_show_url(category.name, parameter) }}">
         <div class="row">
           <div class="col-9">
             <div class="d-flex align-items-center">

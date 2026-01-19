@@ -11,9 +11,15 @@ use snafu::prelude::*;
 use crate::database::category::CategoryOperator;
 use crate::database::content_folder::ContentFolderOperator;
 use crate::database::{category, content_folder};
+use crate::extractors::normalized_path::NormalizedPathComponent;
 use crate::extractors::user::User;
 use crate::state::flash_message::{OperationStatus, get_cookie};
 use crate::state::{AppState, AppStateContext, error::*};
+
+#[derive(Deserialize)]
+pub struct ContentFolderTemplateParameter {
+    pub torrent_id: Option<String>,
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ContentFolderForm {
@@ -42,6 +48,25 @@ pub struct ContentFolderShowTemplate {
     pub parent_folder: Option<content_folder::Model>,
     /// Operation status for UI confirmation (Cookie)
     pub flash: Option<OperationStatus>,
+    // QueryParameter
+    pub parameter: ContentFolderTemplateParameter,
+}
+
+impl ContentFolderShowTemplate {
+    pub fn content_folder_show_url(
+        category_name: &NormalizedPathComponent,
+        folder_path: &String,
+        parameter: &ContentFolderTemplateParameter,
+    ) -> String {
+        if let Some(torrent_id) = &parameter.torrent_id {
+            format!(
+                "/folders/{}{}?torrent_id={}",
+                category_name, folder_path, torrent_id
+            )
+        } else {
+            format!("/folders/{}{}", category_name, folder_path)
+        }
+    }
 }
 
 pub struct PathBreadcrumb {
@@ -54,6 +79,7 @@ pub async fn show(
     user: Option<User>,
     Path((_category_name, folder_path)): Path<(String, String)>,
     jar: CookieJar,
+    Form(parameter): Form<ContentFolderTemplateParameter>,
 ) -> Result<(CookieJar, ContentFolderShowTemplate), AppStateError> {
     let app_state_context = app_state.context().await?;
 
@@ -123,6 +149,7 @@ pub async fn show(
             state: app_state_context,
             user,
             flash: operation_status,
+            parameter,
         },
     ))
 }

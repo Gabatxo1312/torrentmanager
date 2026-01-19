@@ -112,6 +112,11 @@ pub async fn create(
     }
 }
 
+#[derive(Deserialize)]
+pub struct CategoryShowTemplateParameter {
+    pub torrent_id: Option<String>,
+}
+
 #[derive(Template, WebTemplate)]
 #[template(path = "categories/show.html")]
 pub struct CategoryShowTemplate {
@@ -125,6 +130,25 @@ pub struct CategoryShowTemplate {
     category: category::Model,
     /// Operation status for UI confirmation (Cookie)
     pub flash: Option<OperationStatus>,
+    // query parameter
+    parameter: CategoryShowTemplateParameter,
+}
+
+impl CategoryShowTemplate {
+    pub fn content_folder_show_url(
+        category_name: &NormalizedPathComponent,
+        folder_path: &String,
+        parameter: &CategoryShowTemplateParameter,
+    ) -> String {
+        if let Some(torrent_id) = &parameter.torrent_id {
+            format!(
+                "/folders/{}{}?torrent_id={}",
+                category_name, folder_path, torrent_id
+            )
+        } else {
+            format!("/folders/{}{}", category_name, folder_path)
+        }
+    }
 }
 
 pub async fn show(
@@ -132,7 +156,8 @@ pub async fn show(
     user: Option<User>,
     Path(category_name): Path<String>,
     jar: CookieJar,
-) -> Result<impl IntoResponse, AppStateError> {
+    Form(parameter): Form<CategoryShowTemplateParameter>,
+) -> Result<(CookieJar, CategoryShowTemplate), AppStateError> {
     let app_state_context = app_state.context().await?;
 
     let category: category::Model = CategoryOperator::new(app_state.clone(), user.clone())
@@ -157,6 +182,7 @@ pub async fn show(
             state: app_state_context,
             user,
             flash: operation_status,
+            parameter,
         },
     ))
 }
