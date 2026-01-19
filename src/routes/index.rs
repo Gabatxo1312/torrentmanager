@@ -1,11 +1,13 @@
 use askama::Template;
 use askama_web::WebTemplate;
 use axum::extract::State;
+use axum_extra::extract::CookieJar;
 use snafu::prelude::*;
 
 // TUTORIAL: https://github.com/SeaQL/sea-orm/blob/master/examples/axum_example/
 use crate::database::category::{self, CategoryOperator};
 use crate::extractors::user::User;
+use crate::state::flash_message::{OperationStatus, get_cookie};
 use crate::state::{AppState, AppStateContext, error::*};
 
 #[derive(Template, WebTemplate)]
@@ -17,6 +19,8 @@ pub struct IndexTemplate {
     pub user: Option<User>,
     /// Categories
     pub categories: Vec<category::Model>,
+    /// Operation status for UI confirmation
+    pub flash: Option<OperationStatus>,
 }
 
 #[derive(Template, WebTemplate)]
@@ -31,7 +35,11 @@ pub struct UploadTemplate {
 }
 
 impl IndexTemplate {
-    pub async fn new(app_state: AppState, user: Option<User>) -> Result<Self, AppStateError> {
+    pub async fn new(
+        app_state: AppState,
+        user: Option<User>,
+        jar: CookieJar,
+    ) -> Result<(CookieJar, Self), AppStateError> {
         let app_state_context = app_state.context().await?;
 
         let categories = CategoryOperator::new(app_state.clone(), user.clone())
@@ -39,11 +47,17 @@ impl IndexTemplate {
             .await
             .context(CategorySnafu)?;
 
-        Ok(IndexTemplate {
-            state: app_state_context,
-            user,
-            categories,
-        })
+        let (jar, operation_status) = get_cookie(jar);
+
+        Ok((
+            jar,
+            IndexTemplate {
+                state: app_state_context,
+                user,
+                categories,
+                flash: operation_status,
+            },
+        ))
     }
 }
 
@@ -68,8 +82,9 @@ impl UploadTemplate {
 pub async fn index(
     State(app_state): State<AppState>,
     user: Option<User>,
-) -> Result<IndexTemplate, AppStateError> {
-    IndexTemplate::new(app_state, user).await
+    jar: CookieJar,
+) -> Result<(CookieJar, IndexTemplate), AppStateError> {
+    IndexTemplate::new(app_state, user, jar).await
 }
 
 pub async fn upload(
