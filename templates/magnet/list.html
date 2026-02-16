@@ -17,14 +17,15 @@
       <td class="py-3">{{ magnet.resolved }}</td>
       <td class="is-left" align="left">{{ magnet.name }}</td>
       <td>
-        <div class="dropdown">
-          <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Actions
-          </button>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="/magnet/{{ magnet.id }}">Voir</a></li>
-          </ul>
-        </div>
+        {% if magnet.resolved %}
+          <!-- TODO: mettre le lien vers la page des d'import d'un torrent -->
+          <a href="#" class="btn btn-success">
+            Importer le torrent
+          </a>
+        {% else %}
+          <i class="fa fa-spinner fa-pulse me-2"></i>
+          En cours de résolution
+        {% endif %}
       </td>
     </tr>
     {% endfor %}
