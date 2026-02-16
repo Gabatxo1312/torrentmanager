@@ -10,7 +10,8 @@ use snafu::prelude::*;
 
 use crate::database::category::CategoryOperator;
 use crate::database::content_folder::ContentFolderOperator;
-use crate::database::{category, content_folder};
+use crate::database::magnet::MagnetOperator;
+use crate::database::{category, content_folder, magnet};
 use crate::extractors::user::User;
 use crate::state::flash_message::{OperationStatus, get_cookie};
 use crate::state::{AppState, AppStateContext, error::*};
@@ -42,6 +43,8 @@ pub struct ContentFolderShowTemplate {
     pub parent_folder: Option<content_folder::Model>,
     /// Operation status for UI confirmation (Cookie)
     pub flash: Option<OperationStatus>,
+    /// all unimported and resolved Magnets
+    pub resolved_list_unimported: Vec<magnet::Model>,
 }
 
 pub struct PathBreadcrumb {
@@ -56,6 +59,10 @@ pub async fn show(
     jar: CookieJar,
 ) -> Result<(CookieJar, ContentFolderShowTemplate), AppStateError> {
     let app_state_context = app_state.context().await?;
+    let resolved_list_unimported = MagnetOperator::new(app_state.clone(), user.clone())
+        .resolved_list_unimported()
+        .await
+        .context(MagnetUploadSnafu)?;
 
     let content_folder_operator = ContentFolderOperator::new(app_state.clone(), user.clone());
 
@@ -115,6 +122,7 @@ pub async fn show(
     Ok((
         jar,
         ContentFolderShowTemplate {
+            resolved_list_unimported,
             parent_folder,
             breadcrumb_items: content_folder_ancestors,
             sub_content_folders,

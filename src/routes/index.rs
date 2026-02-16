@@ -6,6 +6,7 @@ use snafu::prelude::*;
 
 // TUTORIAL: https://github.com/SeaQL/sea-orm/blob/master/examples/axum_example/
 use crate::database::category::{self, CategoryOperator};
+use crate::database::magnet::{self, MagnetOperator};
 use crate::extractors::user::User;
 use crate::routes::magnet::MagnetForm;
 use crate::state::flash_message::{OperationStatus, get_cookie};
@@ -22,6 +23,8 @@ pub struct IndexTemplate {
     pub categories: Vec<category::Model>,
     /// Operation status for UI confirmation
     pub flash: Option<OperationStatus>,
+    /// all unimported and resolved Magnets
+    pub resolved_list_unimported: Vec<magnet::Model>,
 }
 
 #[derive(Template, WebTemplate)]
@@ -38,6 +41,8 @@ pub struct UploadTemplate {
     pub post: Option<MagnetForm>,
     /// Error with submitted magnet
     pub post_error: Option<AppStateError>,
+    /// all unimported and resolved Magnets
+    pub resolved_list_unimported: Vec<magnet::Model>,
 }
 
 impl IndexTemplate {
@@ -47,6 +52,10 @@ impl IndexTemplate {
         jar: CookieJar,
     ) -> Result<(CookieJar, Self), AppStateError> {
         let app_state_context = app_state.context().await?;
+        let resolved_list_unimported = MagnetOperator::new(app_state.clone(), user.clone())
+            .resolved_list_unimported()
+            .await
+            .context(MagnetUploadSnafu)?;
 
         let categories = CategoryOperator::new(app_state.clone(), user.clone())
             .list()
@@ -59,6 +68,7 @@ impl IndexTemplate {
             jar,
             IndexTemplate {
                 state: app_state_context,
+                resolved_list_unimported,
                 user,
                 categories,
                 flash: operation_status,
