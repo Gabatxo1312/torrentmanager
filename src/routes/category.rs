@@ -8,8 +8,9 @@ use serde::{Deserialize, Serialize};
 use snafu::prelude::*;
 
 use crate::database::category::CategoryError;
-use crate::database::content_folder;
+use crate::database::magnet::MagnetOperator;
 use crate::database::{category, category::CategoryOperator};
+use crate::database::{content_folder, magnet};
 use crate::extractors::normalized_path::*;
 use crate::extractors::user::User;
 use crate::state::flash_message::{OperationStatus, get_cookie};
@@ -32,6 +33,8 @@ pub struct NewCategoryTemplate {
     pub error: Option<CategoryError>,
     /// Default form with value
     pub category_form: Option<CategoryForm>,
+    /// all unimported and resolved Magnets
+    pub resolved_list_unimported: Vec<magnet::Model>,
 }
 
 pub async fn new(
@@ -39,9 +42,14 @@ pub async fn new(
     user: Option<User>,
 ) -> Result<impl axum::response::IntoResponse, AppStateError> {
     let app_state_context = app_state.context().await?;
+    let resolved_list_unimported = MagnetOperator::new(app_state.clone(), user.clone())
+        .resolved_list_unimported()
+        .await
+        .context(MagnetUploadSnafu)?;
 
     Ok(NewCategoryTemplate {
         state: app_state_context,
+        resolved_list_unimported,
         user,
         category_form: None,
         error: None,
@@ -125,6 +133,8 @@ pub struct CategoryShowTemplate {
     category: category::Model,
     /// Operation status for UI confirmation (Cookie)
     pub flash: Option<OperationStatus>,
+    /// all unimported and resolved Magnets
+    pub resolved_list_unimported: Vec<magnet::Model>,
 }
 
 pub async fn show(
@@ -134,6 +144,10 @@ pub async fn show(
     jar: CookieJar,
 ) -> Result<impl IntoResponse, AppStateError> {
     let app_state_context = app_state.context().await?;
+    let resolved_list_unimported = MagnetOperator::new(app_state.clone(), user.clone())
+        .resolved_list_unimported()
+        .await
+        .context(MagnetUploadSnafu)?;
 
     let category: category::Model = CategoryOperator::new(app_state.clone(), user.clone())
         .find_by_name(category_name.to_string())
@@ -152,6 +166,7 @@ pub async fn show(
     Ok((
         jar,
         CategoryShowTemplate {
+            resolved_list_unimported,
             content_folders,
             category,
             state: app_state_context,

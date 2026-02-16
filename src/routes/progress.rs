@@ -1,8 +1,11 @@
+use crate::state::error::*;
 use askama::Template;
 use askama_web::WebTemplate;
 use axum::extract::{Path, State};
 use hightorrent_api::hightorrent::{SingleTarget, Torrent, TorrentContent};
+use snafu::prelude::*;
 
+use crate::database::magnet::{self, MagnetOperator};
 use crate::extractors::torrent_list::{
     TorrentListCounter, TorrentListFilter, TorrentListView, TorrentListViewRequest,
 };
@@ -19,6 +22,8 @@ pub struct TorrentListTemplate {
     filter: TorrentListViewRequest,
     /// Logged-in user.
     user: Option<String>,
+    /// all unimported and resolved Magnets
+    resolved_list_unimported: Vec<magnet::Model>,
 }
 
 #[derive(Debug)]
@@ -41,6 +46,11 @@ pub async fn progress(
 ) -> Result<TorrentListTemplate, AppStateError> {
     let app_state_context = app_state.context().await?;
 
+    let resolved_list_unimported = MagnetOperator::new(app_state.clone(), None)
+        .resolved_list_unimported()
+        .await
+        .context(MagnetUploadSnafu)?;
+
     // Failing to load the TorrentListView is a fatal error
     let TorrentListView {
         counter,
@@ -60,6 +70,7 @@ pub async fn progress(
     };
 
     Ok(TorrentListTemplate {
+        resolved_list_unimported,
         state: app_state_context,
         filter: view_request,
         torrent_list: TorrentListContext {
